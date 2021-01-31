@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger/v3"
+	"github.com/sirupsen/logrus"
 
 	"github.com/illfate2/web-services/dns-server/pkg/cache"
 	"github.com/illfate2/web-services/dns-server/pkg/config"
@@ -42,9 +43,13 @@ func main() {
 	}
 	defer db.Close()
 
+	logger := logrus.New()
+	if cfg.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 	udpResolver := resolver.NewUDPResolver(clientConn)
 	cache := cache.NewBadgerCache(db)
 	mustAddConfigToCache(cache, cfg.PathToConfigFile)
-	dnsServer := dns.NewServer(conn, resolver.NewUDPCacheResolver(udpResolver, cache))
+	dnsServer := dns.NewServer(conn, resolver.NewUDPCacheResolver(udpResolver, cache), logger)
 	dnsServer.Handle()
 }

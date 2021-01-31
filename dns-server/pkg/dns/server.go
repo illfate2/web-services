@@ -2,9 +2,9 @@ package dns
 
 import (
 	"errors"
-	"log"
 	"net"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -12,13 +12,15 @@ type Server struct {
 	resolver       Resolver
 	conn           *net.UDPConn
 	defaultBufSize int
+	logger         *logrus.Logger
 }
 
-func NewServer(conn *net.UDPConn, resolver Resolver) *Server {
+func NewServer(conn *net.UDPConn, resolver Resolver, logger *logrus.Logger) *Server {
 	return &Server{
 		resolver:       resolver,
 		conn:           conn,
 		defaultBufSize: 512,
+		logger:         logger,
 	}
 }
 
@@ -40,7 +42,7 @@ func (s *Server) Handle() {
 	for {
 		err := s.handleIncomingReq()
 		if err != nil {
-			log.Print(err)
+			s.logger.Warn(err)
 		}
 	}
 }
@@ -60,13 +62,13 @@ func (s *Server) handleIncomingReq() error {
 		s.responseWithErr(clientAddr, msg, err)
 		return err
 	}
-	log.Print(msg.Questions)
+	s.logger.Debug("got questions: ", msg.Questions)
 	resolvedMsg, err := s.resolver.ResolveDNS(msg)
 	if err != nil {
 		s.responseWithErr(clientAddr, msg, err)
 		return err
 	}
-	log.Print(msg.Answers)
+	s.logger.Debug("got answers: ", resolvedMsg.Answers)
 	return s.sendDNSMsg(clientAddr, resolvedMsg)
 }
 
@@ -79,7 +81,7 @@ func (s *Server) responseWithErr(clientAddr *net.UDPAddr, msg dnsmessage.Message
 	}
 	err = s.sendDNSMsg(clientAddr, msg)
 	if err != nil {
-		log.Print(err)
+		s.logger.Warn(err)
 	}
 }
 

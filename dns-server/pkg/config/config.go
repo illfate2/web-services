@@ -98,6 +98,7 @@ type CLIConfig struct {
 	ForwardAddr      string `flag:"forward f" desc:"address of dns to forward"`
 	ServerPort       int    `flag:"port p" desc:"server port"`
 	PathToConfigFile string `flag:"config c" desc:"path to config file in csv"`
+	Debug            bool   `flag:"debug d" desc:"enable debug mode with output logs"`
 }
 
 func MustParseCLIConfig() CLIConfig {
@@ -115,4 +116,3 @@ func MustParseCLIConfig() CLIConfig {
 	}
 	return cfg
 }
-
