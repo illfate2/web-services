@@ -7,21 +7,19 @@ import (
 	"os/signal"
 )
 
-
-
 func main() {
-	forwardIP := net.ParseIP("8.8.8.8")
-	forwardPort := 53
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{Port: 8090})
 	if err != nil {
 		panic(err)
 	}
 	defer conn.Close()
-	forward := forwardServers{
-		ip:   forwardIP,
-		port: forwardPort,
+	clientConn, err := net.Dial("udp", "8.8.8.8"+":"+"53")
+	if err != nil {
+		panic(err)
 	}
-	dnsServer := NewDNSServer(conn, forward)
+	defer clientConn.Close()
+	resolver := NewUDPResolver(clientConn)
+	dnsServer := NewDNSServer(conn, resolver)
 	ctx, cancelF := context.WithCancel(context.Background())
 	defer cancelF()
 	go func() {

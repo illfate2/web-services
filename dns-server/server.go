@@ -2,56 +2,25 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
-	"strconv"
 
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-type forwardServers struct {
-	ip   net.IP
-	port int
-}
-
 type DNSServer struct {
-	forward        forwardServers
+	resolver       Resolver
 	conn           *net.UDPConn
 	defaultBufSize int
 }
 
-func NewDNSServer(conn *net.UDPConn, forward forwardServers) *DNSServer {
+func NewDNSServer(conn *net.UDPConn, resolver Resolver) *DNSServer {
 	return &DNSServer{
-		forward:        forward,
+		resolver:       resolver,
 		conn:           conn,
 		defaultBufSize: 512,
 	}
-}
-
-func (s *DNSServer) resolveDNS(dnsMsg dnsmessage.Message) (dnsmessage.Message, error) {
-	var m dnsmessage.Message
-	conn, err := net.Dial("udp", s.forward.ip.String()+":"+strconv.Itoa(s.forward.port))
-	if err != nil {
-		return dnsmessage.Message{}, err
-	}
-	packedDnsMsg, err := dnsMsg.Pack()
-	if err != nil {
-		return dnsmessage.Message{}, err
-	}
-	_, err = conn.Write(packedDnsMsg)
-	if err != nil {
-		return dnsmessage.Message{}, err
-	}
-	resBuf := make([]byte, s.defaultBufSize)
-	_, err = conn.Read(resBuf)
-	if err != nil {
-		return dnsmessage.Message{}, err
-	}
-	err = m.Unpack(resBuf)
-	if err != nil {
-		return dnsmessage.Message{}, err
-	}
-	return m, nil
 }
 
 func (s *DNSServer) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
@@ -75,21 +44,51 @@ func (s *DNSServer) handle(ctx context.Context) {
 			return
 		default:
 		}
-		msg, clientAddr, err := s.readDNSMsg()
+		err := s.handleIncomingReq()
 		if err != nil {
 			log.Print(err)
-			continue
 		}
-		resolvedMsg, err := s.resolveDNS(msg)
-		if err != nil {
-			log.Print(err)
-			continue
+	}
+}
+
+var errNotSupportedType = errors.New("no supported type")
+
+func (s *DNSServer) handleIncomingReq() error {
+	msg, clientAddr, err := s.readDNSMsg()
+	if err != nil {
+		return err
+	}
+	resQuestions := make([]dnsmessage.Question, 0, len(msg.Questions))
+	for _, q := range msg.Questions {
+		if q.Type == dnsmessage.TypeA {
+			resQuestions = append(resQuestions, q)
 		}
-		err = s.sendDNSMsg(clientAddr, resolvedMsg)
-		if err != nil {
-			log.Print(err)
-			continue
-		}
+	}
+	if len(resQuestions) == 0 {
+		s.responseWithErr(clientAddr, msg, err)
+		return errors.New("no supported types")
+	}
+	msg.Questions = resQuestions
+	log.Print(msg.Questions)
+	resolvedMsg, err := s.resolver.ResolveDNS(msg)
+	if err != nil {
+		s.responseWithErr(clientAddr, msg, err)
+		return err
+	}
+	log.Print(msg.Answers)
+	return s.sendDNSMsg(clientAddr, resolvedMsg)
+}
+
+func (s *DNSServer) responseWithErr(clientAddr *net.UDPAddr, msg dnsmessage.Message, err error) {
+	switch err {
+	case errNotSupportedType:
+		msg.Header.RCode = dnsmessage.RCodeNotImplemented
+	default:
+		msg.Header.RCode = dnsmessage.RCodeRefused
+	}
+	err = s.sendDNSMsg(clientAddr, msg)
+	if err != nil {
+		log.Print(err)
 	}
 }
 
