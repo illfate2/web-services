@@ -7,19 +7,16 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	cache "github.com/illfate2/web-services/dns-server/pkg/cache"
+	"github.com/illfate2/web-services/dns-server/pkg/cache"
+	"github.com/illfate2/web-services/dns-server/pkg/dns"
 )
 
-type Resolver interface {
-	ResolveDNS(message dnsmessage.Message) (dnsmessage.Message, error)
-}
-
 type UDPCacheResolver struct {
-	udpResolver Resolver
+	udpResolver dns.Resolver
 	cache       cache.Cache
 }
 
-func NewUDPCacheResolver(udpResolver Resolver, cache cache.Cache) *UDPCacheResolver {
+func NewUDPCacheResolver(udpResolver dns.Resolver, cache cache.Cache) *UDPCacheResolver {
 	return &UDPCacheResolver{udpResolver: udpResolver, cache: cache}
 }
 

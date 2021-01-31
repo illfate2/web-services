@@ -6,17 +6,15 @@ import (
 	"net"
 
 	"golang.org/x/net/dns/dnsmessage"
-
-	resolver2 "github.com/illfate2/web-services/dns-server/pkg/resolver"
 )
 
 type Server struct {
-	resolver       resolver2.Resolver
+	resolver       Resolver
 	conn           *net.UDPConn
 	defaultBufSize int
 }
 
-func NewServer(conn *net.UDPConn, resolver resolver2.Resolver) *Server {
+func NewServer(conn *net.UDPConn, resolver Resolver) *Server {
 	return &Server{
 		resolver:       resolver,
 		conn:           conn,

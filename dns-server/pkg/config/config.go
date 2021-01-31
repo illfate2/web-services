@@ -1,10 +1,12 @@
 package config
 
 import (
+	"flag"
 	"io/ioutil"
 	"net"
 
 	"github.com/jszwec/csvutil"
+	"github.com/octago/sflags/gen/gflag"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -91,3 +93,26 @@ type Resources struct {
 	List []dnsmessage.Resource
 	TTL  int
 }
+
+type CLIConfig struct {
+	ForwardAddr      string `flag:"forward f" desc:"address of dns to forward"`
+	ServerPort       int    `flag:"port p" desc:"server port"`
+	PathToConfigFile string `flag:"config c" desc:"path to config file in csv"`
+}
+
+func MustParseCLIConfig() CLIConfig {
+	cfg := CLIConfig{
+		ForwardAddr: "8.8.8.8:53",
+		ServerPort:  8090,
+	}
+	err := gflag.ParseToDef(&cfg)
+	if err != nil {
+		panic(err)
+	}
+	flag.Parse()
+	if cfg.PathToConfigFile == "" {
+		panic("path to config should not be empty, type --help to see more")
+	}
+	return cfg
+}
+
