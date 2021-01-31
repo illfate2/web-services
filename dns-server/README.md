@@ -32,6 +32,7 @@ To test, build and run with default config:
 Use `nslookup` or other cli tool to test:
 ```bash
 nslookup -port=8090 -type=A domain.con localhost
+nslookup -port=8090 -type=A google.com localhost
 nslookup -port=8090 -type=CNAME sub.domain.com localhost
 nslookup -port=8090 -type=NS random.com localhost
 ```
