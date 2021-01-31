@@ -10,10 +10,10 @@ import (
 	resolver2 "github.com/illfate2/web-services/dns-server/pkg/resolver"
 )
 
-func mustAddConfigToCache(cache cache.Cache){
-	conf := config.GetConfigResources()
+func mustAddConfigToCache(cache cache.Cache, filePath string) {
+	conf := config.GetConfigResources(filePath)
 	for k, v := range conf {
-		err:=cache.Set(k, v.List, time.Second*time.Duration(v.TTL))
+		err := cache.Set(k, v.List, time.Second*time.Duration(v.TTL))
 		if err != nil {
 			panic(err)
 		}
@@ -35,8 +35,7 @@ func main() {
 
 	resolver := resolver2.NewUDPResolver(clientConn)
 	cache := cache.NewInMemoryCache()
-	mustAddConfigToCache(cache)
-	dnsServer := dns.NewDNSServer(conn, resolver2.NewUDPCacheResolver(resolver, cache))
+	mustAddConfigToCache(cache, "/home/illfate/go/src/github.com/illfate2/web-services/dns-server/config-example/config.csv")
+	dnsServer := dns.NewServer(conn, resolver2.NewUDPCacheResolver(resolver, cache))
 	dnsServer.Handle()
 }
-

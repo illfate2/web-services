@@ -10,21 +10,21 @@ import (
 	resolver2 "github.com/illfate2/web-services/dns-server/pkg/resolver"
 )
 
-type DNSServer struct {
+type Server struct {
 	resolver       resolver2.Resolver
 	conn           *net.UDPConn
 	defaultBufSize int
 }
 
-func NewDNSServer(conn *net.UDPConn, resolver resolver2.Resolver) *DNSServer {
-	return &DNSServer{
+func NewServer(conn *net.UDPConn, resolver resolver2.Resolver) *Server {
+	return &Server{
 		resolver:       resolver,
 		conn:           conn,
 		defaultBufSize: 512,
 	}
 }
 
-func (s *DNSServer) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
+func (s *Server) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
 	buf := make([]byte, s.defaultBufSize)
 	_, addr, err := s.conn.ReadFromUDP(buf)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *DNSServer) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
 	return msg, addr, nil
 }
 
-func (s *DNSServer) Handle() {
+func (s *Server) Handle() {
 	for {
 		err := s.handleIncomingReq()
 		if err != nil {
@@ -52,7 +52,7 @@ var (
 	errNotSupportedAmountOfQuestions = errors.New("not supported amount of questions")
 )
 
-func (s *DNSServer) handleIncomingReq() error {
+func (s *Server) handleIncomingReq() error {
 	msg, clientAddr, err := s.readDNSMsg()
 	if err != nil {
 		return err
@@ -62,18 +62,6 @@ func (s *DNSServer) handleIncomingReq() error {
 		s.responseWithErr(clientAddr, msg, err)
 		return err
 	}
-	resQuestions := make([]dnsmessage.Question, 0, len(msg.Questions))
-	for _, q := range msg.Questions {
-		if q.Type == dnsmessage.TypeA {
-			resQuestions = append(resQuestions, q)
-		}
-	}
-	if len(resQuestions) == 0 {
-		err = errNotSupportedType
-		s.responseWithErr(clientAddr, msg, err)
-		return err
-	}
-	msg.Questions = resQuestions
 	log.Print(msg.Questions)
 	resolvedMsg, err := s.resolver.ResolveDNS(msg)
 	if err != nil {
@@ -84,7 +72,7 @@ func (s *DNSServer) handleIncomingReq() error {
 	return s.sendDNSMsg(clientAddr, resolvedMsg)
 }
 
-func (s *DNSServer) responseWithErr(clientAddr *net.UDPAddr, msg dnsmessage.Message, err error) {
+func (s *Server) responseWithErr(clientAddr *net.UDPAddr, msg dnsmessage.Message, err error) {
 	switch err {
 	case errNotSupportedType:
 		msg.Header.RCode = dnsmessage.RCodeNotImplemented
@@ -97,7 +85,7 @@ func (s *DNSServer) responseWithErr(clientAddr *net.UDPAddr, msg dnsmessage.Mess
 	}
 }
 
-func (s *DNSServer) sendDNSMsg(addr *net.UDPAddr, message dnsmessage.Message) error {
+func (s *Server) sendDNSMsg(addr *net.UDPAddr, message dnsmessage.Message) error {
 	packed, err := message.Pack()
 	if err != nil {
 		return err

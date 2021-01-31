@@ -8,8 +8,8 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-func GetConfigResources() map[dnsmessage.Question]*Resources {
-	file, err := ioutil.ReadFile("/home/illfate/go/src/github.com/illfate2/web-services/dns-server/config-example/config.csv")
+func GetConfigResources(path string) map[dnsmessage.Question]*Resources {
+	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -61,6 +61,14 @@ func getDNSResourceBody(t dnsmessage.Type, record string) dnsmessage.ResourceBod
 		return &dnsmessage.AResource{
 			A: [4]byte{ip[12], ip[13], ip[14], ip[15]},
 		}
+	case dnsmessage.TypeCNAME:
+		return &dnsmessage.CNAMEResource{
+			CNAME: dnsmessage.MustNewName(record),
+		}
+	case dnsmessage.TypeNS:
+		return &dnsmessage.NSResource{
+			NS: dnsmessage.MustNewName(record),
+		}
 	default:
 		return nil
 	}
@@ -70,6 +78,10 @@ func getDNSType(t string) dnsmessage.Type {
 	switch t {
 	case "A":
 		return dnsmessage.TypeA
+	case "CNAME":
+		return dnsmessage.TypeCNAME
+	case "NS":
+		return dnsmessage.TypeNS
 	default:
 		return 0
 	}
