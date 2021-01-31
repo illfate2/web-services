@@ -1,9 +1,9 @@
 # DNS-server
  
-#Description
+## Description
 Implementation of DNS server with support of CNAME, A and NS types.
 
-#Run
+## Run
 
 Build locally:
 ```make build
@@ -19,7 +19,7 @@ Run in debug mode:
 ./bin/dns --config=config-example.csv --debug=true
 ```
 
-#Test
+## Test
 
 To test, build and run with default config:
 `./bin/dns --config=config-example.csv`
