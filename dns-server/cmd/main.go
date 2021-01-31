@@ -4,6 +4,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/dgraph-io/badger/v3"
+
 	"github.com/illfate2/web-services/dns-server/pkg/cache"
 	"github.com/illfate2/web-services/dns-server/pkg/config"
 	"github.com/illfate2/web-services/dns-server/pkg/dns"
@@ -34,8 +36,14 @@ func main() {
 	}
 	defer clientConn.Close()
 
+	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
 	udpResolver := resolver.NewUDPResolver(clientConn)
-	cache := cache.NewInMemoryCache()
+	cache := cache.NewBadgerCache(db)
 	mustAddConfigToCache(cache, cfg.PathToConfigFile)
 	dnsServer := dns.NewServer(conn, resolver.NewUDPCacheResolver(udpResolver, cache))
 	dnsServer.Handle()

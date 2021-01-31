@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dgraph-io/badger/v3"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -35,4 +36,48 @@ func (i *inMemoryCache) Get(question dnsmessage.Question) ([]dnsmessage.Resource
 		return nil, ErrNotFound
 	}
 	return answers, nil
+}
+
+type BadgerCache struct {
+	db *badger.DB
+}
+
+func NewBadgerCache(db *badger.DB) *BadgerCache {
+	return &BadgerCache{db: db}
+}
+
+func (b *BadgerCache) Set(question dnsmessage.Question, answers []dnsmessage.Resource, ttl time.Duration) error {
+	questionMsg := dnsmessage.Message{
+		Questions: []dnsmessage.Question{question},
+	}
+	answersMsg := dnsmessage.Message{
+		Answers: answers,
+	}
+	questionBytes, _ := questionMsg.Pack()
+	answersBytes, _ := answersMsg.Pack()
+	return b.db.Update(func(txn *badger.Txn) error {
+		e := badger.NewEntry(questionBytes, answersBytes).WithTTL(ttl)
+		err := txn.SetEntry(e)
+		return err
+	})
+}
+
+func (b *BadgerCache) Get(question dnsmessage.Question) ([]dnsmessage.Resource, error) {
+	m := dnsmessage.Message{
+		Questions: []dnsmessage.Question{question},
+	}
+	questionBytes, _ := m.Pack()
+	err := b.db.View(func(txn *badger.Txn) error {
+		answersBytes, err := txn.Get(questionBytes)
+		if err == badger.ErrKeyNotFound {
+			return ErrNotFound
+		}
+		if err != nil {
+			return err
+		}
+		return answersBytes.Value(func(val []byte) error {
+			return m.Unpack(val)
+		})
+	})
+	return m.Answers, err
 }
