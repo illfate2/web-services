@@ -51,11 +51,19 @@ func (s *DNSServer) handle(ctx context.Context) {
 	}
 }
 
-var errNotSupportedType = errors.New("no supported type")
+var (
+	errNotSupportedType              = errors.New("not supported type")
+	errNotSupportedAmountOfQuestions = errors.New("not supported amount of questions")
+)
 
 func (s *DNSServer) handleIncomingReq() error {
 	msg, clientAddr, err := s.readDNSMsg()
 	if err != nil {
+		return err
+	}
+	if len(msg.Questions) > 1 || len(msg.Questions) == 0 {
+		err = errNotSupportedAmountOfQuestions
+		s.responseWithErr(clientAddr, msg, err)
 		return err
 	}
 	resQuestions := make([]dnsmessage.Question, 0, len(msg.Questions))
@@ -65,8 +73,9 @@ func (s *DNSServer) handleIncomingReq() error {
 		}
 	}
 	if len(resQuestions) == 0 {
+		err = errNotSupportedType
 		s.responseWithErr(clientAddr, msg, err)
-		return errors.New("no supported types")
+		return err
 	}
 	msg.Questions = resQuestions
 	log.Print(msg.Questions)

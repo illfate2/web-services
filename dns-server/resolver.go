@@ -1,13 +1,44 @@
 package main
 
 import (
+	"log"
 	"net"
+	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
 )
 
 type Resolver interface {
 	ResolveDNS(message dnsmessage.Message) (dnsmessage.Message, error)
+}
+
+type UDPCacheResolver struct {
+	udpResolver Resolver
+	cache       Cache
+}
+
+func NewUDPCacheResolver(udpResolver Resolver, cache Cache) *UDPCacheResolver {
+	return &UDPCacheResolver{udpResolver: udpResolver, cache: cache}
+}
+
+func (r *UDPCacheResolver) ResolveDNS(msg dnsmessage.Message) (dnsmessage.Message, error) {
+	question := msg.Questions[0]
+	answers, err := r.cache.Get(question)
+	if err == nil {
+		msg.Response = true
+		msg.Answers = answers
+		return msg, nil
+	}
+	if err != errNotFound {
+		return dnsmessage.Message{}, err
+	}
+	resolvedMsg, err := r.udpResolver.ResolveDNS(msg)
+	if err != nil {
+		return dnsmessage.Message{}, err
+	}
+	err = r.cache.Set(question, resolvedMsg.Answers, time.Second*time.Duration(resolvedMsg.Answers[0].Header.TTL))
+	log.Print(err)
+	return resolvedMsg, nil
 }
 
 type UDPResolver struct {

@@ -19,7 +19,7 @@ func main() {
 	}
 	defer clientConn.Close()
 	resolver := NewUDPResolver(clientConn)
-	dnsServer := NewDNSServer(conn, resolver)
+	dnsServer := NewDNSServer(conn, NewUDPCacheResolver(resolver,newInMemoryCache()))
 	ctx, cancelF := context.WithCancel(context.Background())
 	defer cancelF()
 	go func() {
