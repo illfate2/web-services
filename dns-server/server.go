@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"log"
 	"net"
@@ -37,13 +36,8 @@ func (s *DNSServer) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
 	return msg, addr, nil
 }
 
-func (s *DNSServer) handle(ctx context.Context) {
+func (s *DNSServer) handle() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
 		err := s.handleIncomingReq()
 		if err != nil {
 			log.Print(err)
