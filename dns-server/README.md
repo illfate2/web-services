@@ -6,7 +6,12 @@ Implementation of DNS server with support of CNAME, A and NS types.
 ## Run
 
 Build locally:
-```make build
+``` bash
+make build
+```
+
+Run help info:
+```
 ./bin/dns --help
 ```
 
