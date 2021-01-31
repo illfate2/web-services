@@ -1,4 +1,4 @@
-package main
+package dns
 
 import (
 	"errors"
@@ -6,15 +6,17 @@ import (
 	"net"
 
 	"golang.org/x/net/dns/dnsmessage"
+
+	resolver2 "github.com/illfate2/web-services/dns-server/pkg/resolver"
 )
 
 type DNSServer struct {
-	resolver       Resolver
+	resolver       resolver2.Resolver
 	conn           *net.UDPConn
 	defaultBufSize int
 }
 
-func NewDNSServer(conn *net.UDPConn, resolver Resolver) *DNSServer {
+func NewDNSServer(conn *net.UDPConn, resolver resolver2.Resolver) *DNSServer {
 	return &DNSServer{
 		resolver:       resolver,
 		conn:           conn,
@@ -36,7 +38,7 @@ func (s *DNSServer) readDNSMsg() (dnsmessage.Message, *net.UDPAddr, error) {
 	return msg, addr, nil
 }
 
-func (s *DNSServer) handle() {
+func (s *DNSServer) Handle() {
 	for {
 		err := s.handleIncomingReq()
 		if err != nil {

@@ -1,13 +1,32 @@
-package main
+package config
 
 import (
 	"io/ioutil"
 	"net"
-	"time"
 
 	"github.com/jszwec/csvutil"
 	"golang.org/x/net/dns/dnsmessage"
 )
+
+func GetConfigResources() map[dnsmessage.Question]*Resources {
+	file, err := ioutil.ReadFile("/home/illfate/go/src/github.com/illfate2/web-services/dns-server/config-example/config.csv")
+	if err != nil {
+		panic(err)
+	}
+	var cc []Config
+	err = csvutil.Unmarshal(file, &cc)
+	if err != nil {
+		panic(err)
+	}
+	resConfig := make(map[dnsmessage.Question]*Resources)
+	for _, c := range cc {
+		if resConfig[c.dnsQuestion()] == nil {
+			resConfig[c.dnsQuestion()] = &Resources{TTL: c.TTL}
+		}
+		resConfig[c.dnsQuestion()].List = append(resConfig[c.dnsQuestion()].List, c.dnsResource())
+	}
+	return resConfig
+}
 
 type Config struct {
 	Name   string `csv:"name"`
@@ -57,47 +76,6 @@ func getDNSType(t string) dnsmessage.Type {
 }
 
 type Resources struct {
-	list []dnsmessage.Resource
-	ttl  int
-}
-
-func getConfigResources() map[dnsmessage.Question]*Resources {
-	file, err := ioutil.ReadFile("config.csv")
-	if err != nil {
-		panic(err)
-	}
-	var cc []Config
-	err = csvutil.Unmarshal(file, &cc)
-	if err != nil {
-		panic(err)
-	}
-	resConfig := make(map[dnsmessage.Question]*Resources)
-	for _, c := range cc {
-		if resConfig[c.dnsQuestion()] == nil {
-			resConfig[c.dnsQuestion()] = &Resources{ttl: c.TTL}
-		}
-		resConfig[c.dnsQuestion()].list = append(resConfig[c.dnsQuestion()].list, c.dnsResource())
-	}
-	return resConfig
-}
-
-func main() {
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{Port: 8090})
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-	clientConn, err := net.Dial("udp", "8.8.8.8"+":"+"53")
-	if err != nil {
-		panic(err)
-	}
-	defer clientConn.Close()
-	resolver := NewUDPResolver(clientConn)
-	cache := newInMemoryCache()
-	conf := getConfigResources()
-	for k, v := range conf {
-		cache.Set(k, v.list, time.Second*time.Duration(v.ttl))
-	}
-	dnsServer := NewDNSServer(conn, NewUDPCacheResolver(resolver, cache))
-	dnsServer.handle()
+	List []dnsmessage.Resource
+	TTL  int
 }

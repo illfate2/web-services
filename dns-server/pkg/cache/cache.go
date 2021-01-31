@@ -1,4 +1,4 @@
-package main
+package cache
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ type inMemoryCache struct {
 	questionToAnswer map[dnsmessage.Question][]dnsmessage.Resource
 }
 
-func newInMemoryCache() *inMemoryCache {
+func NewInMemoryCache() *inMemoryCache {
 	return &inMemoryCache{
 		questionToAnswer: make(map[dnsmessage.Question][]dnsmessage.Resource),
 	}
@@ -27,12 +27,12 @@ func (i *inMemoryCache) Set(question dnsmessage.Question, answers []dnsmessage.R
 	return nil
 }
 
-var errNotFound = errors.New("err not found")
+var ErrNotFound = errors.New("err not found")
 
 func (i *inMemoryCache) Get(question dnsmessage.Question) ([]dnsmessage.Resource, error) {
 	answers, ok := i.questionToAnswer[question]
 	if !ok {
-		return nil, errNotFound
+		return nil, ErrNotFound
 	}
 	return answers, nil
 }

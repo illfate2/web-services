@@ -2,4 +2,3 @@ name,type,ttl,record
 domain.con.,A,3600,192.168.1.1
 sub.domain.com.,CNAME,3600,domain.con
 random.com,NS,3600,lol.kek
-,,,,,,,,,,,,,,,,,,,,,,,,
