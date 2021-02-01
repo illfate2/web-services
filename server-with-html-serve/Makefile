@@ -4,3 +4,7 @@ bin/museum:
 .PHONY: dep
 dep:
 	go mod tidy
+
+.PHONY: run-migration
+run-migration:
+	migrate -source migrations -database ${DB_ADDR} up -verbose

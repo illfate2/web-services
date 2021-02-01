@@ -11,14 +11,15 @@ import (
 
 type Server struct {
 	http.Handler
-	service service.Service
+	service *service.Service
 	tmpl    *template.Template
 }
 
-func NewServer() *Server {
+func NewServer(serv *service.Service) *Server {
 	e := echo.New()
 	s := &Server{
 		Handler: e,
+		service: serv,
 		tmpl:    template.Must(template.ParseGlob("static/*")),
 	}
 	s.initMuseumItemAPI(e)
