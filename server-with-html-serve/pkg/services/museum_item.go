@@ -9,6 +9,24 @@ import (
 // todo: add tx
 func (s *Service) CreateMuseumItem(item entities.MuseumItemWithDetails) (entities.MuseumItemWithDetails, error) {
 	var err error
+	item.Keeper, err = s.CreatePerson(item.Keeper)
+	if err != nil {
+		return entities.MuseumItemWithDetails{}, err
+	}
+	item.KeeperID = item.Keeper.ID
+
+	item.Fund, err = s.CreateMuseumFund(item.Fund)
+	if err != nil {
+		return entities.MuseumItemWithDetails{}, errors.Wrap(err, "failed to insert musuem fund")
+	}
+	item.MuseumFundID = item.Fund.ID
+
+	item.Set, err = s.CreateMuseumSet(item.Set)
+	if err != nil {
+		return entities.MuseumItemWithDetails{}, errors.Wrap(err, "failed to insert set")
+	}
+	item.MuseumSetID = item.Set.ID
+
 	item.MuseumItem, err = s.insertMuseumItem(item.MuseumItem)
 	if err != nil {
 		return entities.MuseumItemWithDetails{}, errors.Wrap(err, "failed to insert item")

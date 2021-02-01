@@ -7,9 +7,9 @@ import (
 	"github.com/illfate2/web-services/server-with-html-serve/pkg/entities"
 )
 
-func (s *Repo) FindMuseumItem(id int) (entities.MuseumItem, error) {
+func (r *Repo) FindMuseumItem(id int) (entities.MuseumItem, error) {
 	var item entities.MuseumItem
-	err := s.conn.QueryRow(context.Background(),
+	err := r.conn.QueryRow(context.Background(),
 		`SELECT
 		id,name,creation_date,annotation,set_id,fund_id,
 		keeper_id,inventory_number
@@ -26,9 +26,9 @@ func (s *Repo) FindMuseumItem(id int) (entities.MuseumItem, error) {
 	return item, nil
 }
 
-func (s *Repo) FindMuseumItemByName(name string) (entities.MuseumItem, error) {
+func (r *Repo) FindMuseumItemByName(name string) (entities.MuseumItem, error) {
 	var item entities.MuseumItem
-	err := s.conn.QueryRow(context.Background(),
+	err := r.conn.QueryRow(context.Background(),
 		`SELECT
 		id,name,creation_date,annotation,set_id,fund_id,
 		keeper_id,inventory_number
@@ -45,9 +45,9 @@ func (s *Repo) FindMuseumItemByName(name string) (entities.MuseumItem, error) {
 	return item, nil
 }
 
-func (s *Repo) FindMuseumItemWithDetails(id int) (entities.MuseumItemWithDetails, error) {
+func (r *Repo) FindMuseumItemWithDetails(id int) (entities.MuseumItemWithDetails, error) {
 	var item entities.MuseumItemWithDetails
-	err := s.conn.QueryRow(context.Background(),
+	err := r.conn.QueryRow(context.Background(),
 		`SELECT
 		mi.id ,mi.name,mi.creation_date,mi.annotation,mi.set_id,mi.fund_id,
 		mi.keeper_id,mi.inventory_number,p.first_name,p.second_name,p.middle_name,
@@ -134,7 +134,7 @@ func (b *queryBuilder) buildQuery() (string, []interface{}) {
 	return res, b.args
 }
 
-func (s *Repo) FindMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.MuseumItem, error) {
+func (r *Repo) FindMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.MuseumItem, error) {
 	selects := `SELECT 
 			mi.id,mi.name,mi.creation_date,mi.annotation,mi.set_id,mi.fund_id,
 			mi.keeper_id,mi.inventory_number		
@@ -154,7 +154,7 @@ func (s *Repo) FindMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.
 				*args.Date, *args.Date)
 	}
 	queryStr, queryArgs := q.buildQuery()
-	rows, err := s.conn.Query(context.Background(), queryStr, queryArgs...)
+	rows, err := r.conn.Query(context.Background(), queryStr, queryArgs...)
 
 	if err != nil {
 		return nil, err
@@ -176,8 +176,8 @@ func (s *Repo) FindMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.
 	return items, nil
 }
 
-func (s *Repo) InsertMuseumItem(item entities.MuseumItem) (entities.MuseumItem, error) {
-	err := s.conn.QueryRow(context.Background(),
+func (r *Repo) InsertMuseumItem(item entities.MuseumItem) (entities.MuseumItem, error) {
+	err := r.conn.QueryRow(context.Background(),
 		`INSERT INTO museum_items(name,creation_date,annotation,inventory_number,keeper_id,set_id,fund_id)
 		VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
 		item.Name, item.CreationDate.Time, item.Annotation, item.InventoryNumber, item.KeeperID, item.MuseumSetID, item.MuseumFundID).
@@ -188,8 +188,8 @@ func (s *Repo) InsertMuseumItem(item entities.MuseumItem) (entities.MuseumItem, 
 	return item, nil
 }
 
-func (s *Repo) UpdateMuseumItem(item entities.MuseumItem) error {
-	_, err := s.conn.Exec(context.Background(),
+func (r *Repo) UpdateMuseumItem(item entities.MuseumItem) error {
+	_, err := r.conn.Exec(context.Background(),
 		`UPDATE museum_items 
 			SET name = $1, creation_date = $2, annotation = $3
 			WHERE id = $4`,
@@ -197,8 +197,8 @@ func (s *Repo) UpdateMuseumItem(item entities.MuseumItem) error {
 	return err
 }
 
-func (s *Repo) DeleteMuseumItem(id int) error {
-	_, err := s.conn.Exec(context.Background(),
+func (r *Repo) DeleteMuseumItem(id int) error {
+	_, err := r.conn.Exec(context.Background(),
 		`DELETE FROM museum_items WHERE id = $1`, id)
 	return err
 }
