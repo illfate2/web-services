@@ -191,9 +191,9 @@ func (r *Repo) InsertMuseumItem(item entities.MuseumItem) (entities.MuseumItem, 
 func (r *Repo) UpdateMuseumItem(item entities.MuseumItem) error {
 	_, err := r.conn.Exec(context.Background(),
 		`UPDATE museum_items 
-			SET name = $1, creation_date = $2, annotation = $3
+			SET name = $1, creation_date = $2, annotation = $3, inventory_number = $4
 			WHERE id = $4`,
-		item.Name, item.CreationDate.Time, item.Annotation, item.ID)
+		item.Name, item.CreationDate.Time, item.Annotation, item.InventoryNumber, item.ID)
 	return err
 }
 

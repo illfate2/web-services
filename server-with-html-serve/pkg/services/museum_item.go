@@ -8,24 +8,15 @@ import (
 
 // todo: add tx
 func (s *Service) CreateMuseumItem(item entities.MuseumItemWithDetails) (entities.MuseumItemWithDetails, error) {
+	item.MuseumFundID = item.Fund.ID
+	item.MuseumSetID = item.Set.ID
+
 	var err error
 	item.Keeper, err = s.CreatePerson(item.Keeper)
 	if err != nil {
 		return entities.MuseumItemWithDetails{}, err
 	}
 	item.KeeperID = item.Keeper.ID
-
-	item.Fund, err = s.CreateMuseumFund(item.Fund)
-	if err != nil {
-		return entities.MuseumItemWithDetails{}, errors.Wrap(err, "failed to insert musuem fund")
-	}
-	item.MuseumFundID = item.Fund.ID
-
-	item.Set, err = s.CreateMuseumSet(item.Set)
-	if err != nil {
-		return entities.MuseumItemWithDetails{}, errors.Wrap(err, "failed to insert set")
-	}
-	item.MuseumSetID = item.Set.ID
 
 	item.MuseumItem, err = s.insertMuseumItem(item.MuseumItem)
 	if err != nil {
@@ -47,7 +38,7 @@ func (s *Service) GetMuseumItemWithDetails(id int) (entities.MuseumItemWithDetai
 	return s.repo.FindMuseumItemWithDetails(id)
 }
 
-func (s *Service) FindMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.MuseumItem, error) {
+func (s *Service) SearchMuseumItems(args entities.SearchMuseumItemsArgs) ([]entities.MuseumItem, error) {
 	return s.repo.FindMuseumItems(args)
 }
 

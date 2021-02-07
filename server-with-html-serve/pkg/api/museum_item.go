@@ -12,11 +12,11 @@ import (
 
 func (s *Server) initMuseumItemAPI(e *echo.Echo) {
 	e.POST("/museumItem", s.createMuseumItem)
-	e.GET("/museumItem", s.getMuseumItemPage)
+	e.GET("/museumItem", s.getCreateMuseumItemPage)
 	e.GET("/museumItem/:id", s.getMuseumItem)
 	e.GET("/museumItems", s.getMuseumItems)
 	e.GET("/deleteMuseumItem/:id", s.deleteMuseumItem)
-	e.GET("/editMuseumItem/:id", s.editMuseumItem)
+	e.GET("/editMuseumItem/:id", s.getEditMuseumItempage)
 	e.POST("/editMuseumItem/:id", s.updateMuseumItem)
 
 	e.GET("/museumItemSearch", s.getMuseumItemSearchPage)
@@ -44,7 +44,7 @@ func (s *Server) getMuseumItem(c echo.Context) error {
 	return nil
 }
 
-func (s *Server) editMuseumItem(c echo.Context) error {
+func (s *Server) getEditMuseumItempage(c echo.Context) error {
 	id := c.Param("id")
 	parsedID, _ := strconv.ParseInt(id, 10, 64)
 	item, err := s.service.GetMuseumItem(int(parsedID))
@@ -77,8 +77,19 @@ func (s *Server) deleteMuseumItem(c echo.Context) error {
 	return c.Redirect(301, "/museumItems")
 }
 
-func (s *Server) getMuseumItemPage(c echo.Context) error {
-	_ = s.tmpl.ExecuteTemplate(c.Response().Writer, "New museum item", nil)
+func (s *Server) getCreateMuseumItemPage(c echo.Context) error {
+	sets, err := s.service.GetMuseumSets()
+	if err != nil {
+		return err
+	}
+	funds, err := s.service.GetMuseumFunds()
+	if err != nil {
+		return err
+	}
+	_ = s.tmpl.ExecuteTemplate(c.Response().Writer, "New museum item", map[string]interface{}{
+		"sets":  sets,
+		"funds": funds,
+	})
 	return nil
 }
 
@@ -89,7 +100,7 @@ func (s *Server) getMuseumItemSearchPage(c echo.Context) error {
 
 func (s *Server) searchMuseumItems(c echo.Context) error {
 	args := getSearchArgsFromForm(c)
-	items, err := s.service.FindMuseumItems(args)
+	items, err := s.service.SearchMuseumItems(args)
 	if err != nil {
 		log.Printf("Failed to find museum item: %+v", err)
 		return err
@@ -99,7 +110,7 @@ func (s *Server) searchMuseumItems(c echo.Context) error {
 }
 
 func (s *Server) getMuseumItems(c echo.Context) error {
-	items, err := s.service.FindMuseumItems(entities.SearchMuseumItemsArgs{})
+	items, err := s.service.SearchMuseumItems(entities.SearchMuseumItemsArgs{})
 	if err != nil {
 		log.Printf("Failed to find museum item: %+v", err)
 		return err
@@ -155,12 +166,18 @@ func getPersonFromForm(c echo.Context) entities.Person {
 
 func getFundFromForm(c echo.Context) entities.MuseumFund {
 	var fund entities.MuseumFund
-	fund.Name = c.FormValue("fund_name")
+	id := c.FormValue("fund")
+	fund.ID, _ = strconv.Atoi(id)
 	return fund
+}
+
+func getNameFromForm(c echo.Context) string {
+	return c.FormValue("name")
 }
 
 func getSetFromForm(c echo.Context) entities.MuseumSet {
 	var set entities.MuseumSet
-	set.Name = c.FormValue("set_name")
+	id := c.FormValue("set")
+	set.ID, _ = strconv.Atoi(id)
 	return set
 }
