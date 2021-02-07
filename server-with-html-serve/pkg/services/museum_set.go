@@ -20,6 +20,18 @@ func (s *Service) GetMuseumSets() ([]entities.MuseumSet, error) {
 	return sets, nil
 }
 
-func (s *Service) FindMuseumSet(id int) (entities.MuseumSetWithDetails, error) {
+func (s *Service) GetMuseumSet(id int) (entities.MuseumSetWithDetails, error) {
 	return s.repo.FindMuseumSet(id)
+}
+
+func (s *Service) GetMuseumSetByName(name string) (entities.MuseumSet, error) {
+	return s.repo.FindMuseumSetByName(name)
+}
+
+func (s *Service) DeleteMuseumSet(id int) error {
+	return s.repo.DeleteMuseumSet(id)
+}
+
+func (s *Service) UpdateMuseumSet(set entities.MuseumSet) error {
+	return s.repo.UpdateMuseumSet(set)
 }

@@ -34,13 +34,22 @@
             </li>
             <h4>Fund info</h4>
             <li>
-                <label for="fund_name">Name:</label>
-                <input required type="fund_name" id="fund_name" name="fund_name">
+                <label for="fund">Choose a fund:</label>
+
+                <select name="fund" id="fund">
+                    {{ range .funds }}
+                    <option value="{{ .ID }}">{{ .Name }}</option>
+                    {{ end }}
+                </select>
             </li>
             <h4>Set info</h4>
             <li>
-                <label for="set_name">Name:</label>
-                <input required type="set_name" id="set_name" name="set_name">
+                <label for="set">Choose a set:</label>
+                <select name="set" id="set">
+                {{ range .sets }}
+                <option value="{{ .ID }}">{{ .Name }}</option>
+                {{ end }}
+                </select>
             </li>
             <li class="button">
                 <button type="submit">Create item</button>

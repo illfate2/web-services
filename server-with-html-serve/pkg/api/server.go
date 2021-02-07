@@ -23,6 +23,13 @@ func NewServer(serv *service.Service) *Server {
 		tmpl:    template.Must(template.ParseGlob("static/*")),
 	}
 	s.initMuseumItemAPI(e)
+	s.initMuseumItemMovement(e)
+	s.initMuseumSet(e)
+	s.initMuseumFund(e)
+	e.GET("/", func(c echo.Context) error {
+		_ = s.tmpl.ExecuteTemplate(c.Response().Writer, "Home page", nil)
+		return nil
+	})
 	e.Static("/", "static")
 	return s
 }

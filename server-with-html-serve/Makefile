@@ -7,4 +7,4 @@ dep:
 
 .PHONY: run-migration
 run-migration:
-	migrate -source migrations -database ${DB_ADDR} up -verbose
+	migrate -path migration -database ${DB_ADDR} -verbose up

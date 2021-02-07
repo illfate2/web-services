@@ -44,6 +44,13 @@ func (r *Repo) FindMuseumSets() ([]entities.MuseumSet, error) {
 	return sets, nil
 }
 
+func (r *Repo) FindMuseumSetByName(name string) (entities.MuseumSet, error) {
+	var set entities.MuseumSet
+	err := r.conn.QueryRow(context.TODO(), `SELECT id,name FROM museum_item_sets WHERE name = $1`, name).
+		Scan(&set.ID, &set.Name)
+	return set, err
+}
+
 func (r *Repo) FindMuseumSet(id int) (entities.MuseumSetWithDetails, error) {
 	rows, err := r.conn.Query(context.Background(),
 		`SELECT 
@@ -71,4 +78,18 @@ func (r *Repo) FindMuseumSet(id int) (entities.MuseumSetWithDetails, error) {
 		curSet.Items = append(curSet.Items, item)
 	}
 	return curSet, nil
+}
+
+func (r *Repo) UpdateMuseumSet(set entities.MuseumSet) error {
+	_, err := r.conn.Exec(context.Background(),
+		`UPDATE museum_item_sets 
+			SET name = $1
+			WHERE id = $2`,
+		set.Name, set.ID)
+	return err
+}
+
+func (r *Repo) DeleteMuseumSet(id int) error {
+	_, err := r.conn.Exec(context.TODO(), `DELETE FROM museum_item_sets WHERE id = $1`, id)
+	return err
 }
