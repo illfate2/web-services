@@ -14,12 +14,7 @@ func (s *Service) CreateMuseumItemMovement(movement entities.MuseumItemMovement)
 		return entities.MuseumItemMovement{}, err
 	}
 	movement.ResponsiblePersonID = movement.ResponsiblePerson.ID
-	item, err := s.GetMuseumItemByName(movement.Item.Name)
-	if err != nil {
-		log.Printf("failed to find movement: %s", err)
-		return entities.MuseumItemMovement{}, err
-	}
-	movement.MuseumItemID = item.ID
+	movement.MuseumItemID = movement.Item.ID
 	movement, err = s.insertMuseumItemMovement(movement)
 	if err != nil {
 		log.Print(err)
@@ -40,8 +35,8 @@ func (s *Service) insertMuseumItemMovement(movement entities.MuseumItemMovement)
 	return s.repo.InsertMuseumItemMovement(movement)
 }
 
-func (s *Service) UpdateMuseumItemMovement(item entities.MuseumItem) error {
-	return s.UpdateMuseumItemMovement(item)
+func (s *Service) UpdateMuseumItemMovement(movement entities.MuseumItemMovement) error {
+	return s.repo.UpdateMuseumItemMovement(movement)
 }
 
 func (s *Service) DeleteMuseumItemMovement(id int) error {

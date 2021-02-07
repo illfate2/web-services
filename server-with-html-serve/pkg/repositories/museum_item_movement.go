@@ -9,8 +9,14 @@ import (
 func (r *Repo) FindMuseumItemMovement(id int) (entities.MuseumItemMovement, error) {
 	var m entities.MuseumItemMovement
 	err := r.conn.QueryRow(context.Background(),
-		`SELECT id,item_id,responsible_person_id,accept_date,exhibit_transfer_date,exhibit_return_date FROM museum_item_movements WHERE id = $1`, id).
-		Scan(&m.ID, &m.MuseumItemID, &m.ResponsiblePersonID, &m.AcceptDate, &m.ExhibitTransferDate, &m.ExhibitReturnDate)
+		`SELECT mim.id, mim.item_id, mim.responsible_person_id, mim.accept_date,
+		mim.exhibit_transfer_date, mim.exhibit_return_date, mi.name, p.first_name, p.middle_name, p.second_name
+		FROM museum_item_movements mim 
+		LEFT JOIN museum_items mi ON mi.id = mim.item_id
+		LEFT JOIN persons p ON p.id = mim.responsible_person_id
+		WHERE mim.id = $1`, id).
+		Scan(&m.ID, &m.MuseumItemID, &m.ResponsiblePersonID, &m.AcceptDate, &m.ExhibitTransferDate, &m.ExhibitReturnDate,
+			&m.Item.Name, &m.ResponsiblePerson.FirstName, &m.ResponsiblePerson.MiddleName, &m.ResponsiblePerson.LastName)
 	if err != nil {
 		return entities.MuseumItemMovement{}, err
 	}
@@ -20,7 +26,8 @@ func (r *Repo) FindMuseumItemMovement(id int) (entities.MuseumItemMovement, erro
 func (r *Repo) FindMuseumItemMovements() ([]entities.MuseumItemMovement, error) {
 	var movements []entities.MuseumItemMovement
 	rows, err := r.conn.Query(context.Background(),
-		`SELECT id,item_id,responsible_person_id,accept_date,exhibit_transfer_date,exhibit_return_date FROM museum_item_movements`)
+		`SELECT id, item_id, responsible_person_id, accept_date, exhibit_transfer_date, exhibit_return_date
+			FROM museum_item_movements`)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +55,12 @@ func (r *Repo) InsertMuseumItemMovement(movement entities.MuseumItemMovement) (e
 	return movement, nil
 }
 
-func (r *Repo) UpdateMuseumItemMovement(item entities.MuseumItem) error {
+func (r *Repo) UpdateMuseumItemMovement(movement entities.MuseumItemMovement) error {
 	_, err := r.conn.Exec(context.Background(),
-		`UPDATE museum_items 
-			SET name = $1, creation_date = $2, annotation = $3
+		`UPDATE museum_item_movements 
+			SET accept_date = $1, exhibit_transfer_date = $2, exhibit_return_date= $3
 			WHERE id = $4`,
-		item.Name, item.CreationDate.Time, item.Annotation, item.ID)
+		movement.AcceptDate, movement.ExhibitTransferDate, movement.ExhibitReturnDate, movement.ID)
 	return err
 }
 
