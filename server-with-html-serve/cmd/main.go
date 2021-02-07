@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/kelseyhightower/envconfig"
@@ -14,8 +15,9 @@ import (
 )
 
 type serverConfig struct {
-	ServerPort string `envconfig:"SERVER_PORT"`
-	DBAddr     string `envconfig:"DB_ADDR"`
+	ServerPort  string `envconfig:"SERVER_PORT"`
+	DBAddr      string `envconfig:"DB_ADDR"`
+	LooFilePath string `envconfig:"LOG_FILE_PATH" default:"log.txt"`
 }
 
 func main() {
@@ -30,6 +32,12 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close(context.TODO())
-	s := api.NewServer(service.NewService(repo))
+	file, err := os.OpenFile(c.LooFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	s := api.NewServer(service.NewService(repo), file)
+	log.Print("Starting server")
 	log.Fatal(http.ListenAndServe(":"+c.ServerPort, s))
 }
