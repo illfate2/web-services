@@ -6,7 +6,6 @@ import (
 	"github.com/illfate2/web-services/server-with-html-serve/pkg/entities"
 )
 
-// todo: add tx
 func (s *Service) CreateMuseumItem(item entities.MuseumItemWithDetails) (entities.MuseumItemWithDetails, error) {
 	item.MuseumFundID = item.Fund.ID
 	item.MuseumSetID = item.Set.ID
@@ -28,10 +27,6 @@ func (s *Service) CreateMuseumItem(item entities.MuseumItemWithDetails) (entitie
 
 func (s *Service) GetMuseumItem(id int) (entities.MuseumItem, error) {
 	return s.repo.FindMuseumItem(id)
-}
-
-func (s *Service) GetMuseumItemByName(name string) (entities.MuseumItem, error) {
-	return s.repo.FindMuseumItemByName(name)
 }
 
 func (s *Service) GetMuseumItemWithDetails(id int) (entities.MuseumItemWithDetails, error) {

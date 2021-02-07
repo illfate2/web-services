@@ -26,25 +26,6 @@ func (r *Repo) FindMuseumItem(id int) (entities.MuseumItem, error) {
 	return item, nil
 }
 
-func (r *Repo) FindMuseumItemByName(name string) (entities.MuseumItem, error) {
-	var item entities.MuseumItem
-	err := r.conn.QueryRow(context.Background(),
-		`SELECT
-		id,name,creation_date,annotation,set_id,fund_id,
-		keeper_id,inventory_number
-		FROM museum_items WHERE name = $1`, name).
-		Scan(
-			&item.ID, &item.Name,
-			&item.CreationDate.Time,
-			&item.Annotation,
-			&item.MuseumSetID, &item.MuseumFundID, &item.KeeperID, &item.InventoryNumber,
-		)
-	if err != nil {
-		return entities.MuseumItem{}, err
-	}
-	return item, nil
-}
-
 func (r *Repo) FindMuseumItemWithDetails(id int) (entities.MuseumItemWithDetails, error) {
 	var item entities.MuseumItemWithDetails
 	err := r.conn.QueryRow(context.Background(),

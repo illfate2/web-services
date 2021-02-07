@@ -20,10 +20,6 @@ func (s *Service) UpdateMuseumFund(fund entities.MuseumFund) error {
 	return s.repo.UpdateMuseumFund(fund)
 }
 
-func (s *Service) GetMuseumFund(name string) (entities.MuseumFund, error) {
-	return s.repo.FindMuseumFund(name)
-}
-
 func (s *Service) DeleteMuseumFund(id int) error {
 	return s.repo.DeleteMuseumFund(id)
 }

@@ -24,15 +24,6 @@ func (r *Repo) DeleteMuseumFund(id int) error {
 	return err
 }
 
-func (r *Repo) FindMuseumFund(name string) (entities.MuseumFund, error) {
-	var fund entities.MuseumFund
-	err := r.conn.QueryRow(context.Background(),
-		`SELECT id, name FROM museum_funds WHERE name = $1`,
-		name).
-		Scan(&fund.ID, &fund.Name)
-	return fund, err
-}
-
 func (r *Repo) FindMuseumFunds() ([]entities.MuseumFund, error) {
 	rows, err := r.conn.Query(context.Background(),
 		`SELECT id, name FROM museum_funds`)
