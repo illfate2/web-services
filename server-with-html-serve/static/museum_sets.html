@@ -1,0 +1,27 @@
+{{ define "Museum sets" }}
+    {{ template "Header" }}
+    <h2> Museum sets </h2>
+<a href="/museumSet">NEW</a>
+    <table border="1">
+        <thead>
+        <tr>
+            <td>Name</td>
+            <td>View</td>
+            <td>Edit</td>
+            <td>Delete</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{ range . }}
+            <tr>
+                <td> {{ .Name }} </td>
+                <td><a href="/museumSet/{{.ID}}">View</a></td>
+                <td><a href="/editMuseumSet/{{.ID}}">Edit</a></td>
+                <td><a href="/deleteMuseumSet/{{.ID}}">Delete</a></td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+    {{ template "Footer" }}
+{{ end }}
+

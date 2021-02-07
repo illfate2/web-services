@@ -1,0 +1,27 @@
+{{ define "Museum funds" }}
+{{ template "Header" }}
+<h2> Museum funds </h2>
+<a href="/museumFund">NEW</a>
+<table border="1">
+    <thead>
+    <tr>
+        <td>Name</td>
+        <td>View</td>
+        <td>Edit</td>
+        <td>Delete</td>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range . }}
+    <tr>
+        <td> {{ .Name }} </td>
+        <td><a href="/museumFund/{{.ID}}">View</a></td>
+        <td><a href="/editMuseumFund/{{.ID}}">Edit</a></td>
+        <td><a href="/deleteMuseumFund/{{.ID}}">Delete</a></td>
+    </tr>
+    {{ end }}
+    </tbody>
+</table>
+{{ template "Footer" }}
+{{ end }}
+
