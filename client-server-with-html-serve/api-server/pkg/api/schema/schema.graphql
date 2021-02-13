@@ -1,0 +1,134 @@
+scalar Time
+
+type MuseumExhibition {
+    id: ID!
+    name: String!
+    address: String!
+    phoneNo: String!
+}
+
+type MuseumFund {
+    id: ID!
+    name: String!
+}
+
+type MuseumItemMovement {
+    id: ID!
+    acceptDate: Time
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+    item: MuseumItem
+    person: Person
+}
+
+type MuseumItem {
+    id: ID!
+    inventoryNumber: String!
+    name: String!
+    creationDate: Time!
+    annotation: String
+    person: Person!
+    set: MuseumSet!
+    fund: MuseumFund!
+}
+
+type Person {
+    id: ID
+    firstName: String!
+    lastName: String!
+    middleName: String!
+
+}
+
+type MuseumSet {
+    id: ID!
+    name: String!
+}
+
+type Query{
+    museumItem(id: ID!): MuseumItem
+    museumItems: [MuseumItem!]!
+
+    museumSet(id: ID!): MuseumSet
+    museumSets: [MuseumSet!]!
+
+    museumFund(id: ID!): MuseumFund
+    museumFunds: [MuseumFund!]!
+
+    museumMovement(id: ID!): MuseumItemMovement
+    museumMovements: [MuseumItemMovement!]!
+}
+
+input PersonInput {
+    firstName: String!
+    lastName: String!
+    middleName: String!
+}
+
+input MuseumItemInput {
+    inventoryNumber: String!
+    name: String!
+    annotation: String
+    creationDate: Time!
+    setID: ID!
+    fundID: ID!
+    personInput: PersonInput!
+}
+
+input UpdateMuseumItemInput {
+    inventoryNumber: String
+    name: String
+    annotation: String
+    setID: ID
+    fundID: ID
+    creationDate: Time
+}
+
+input MuseumFundInput{
+    name: String!
+}
+
+input UpdateMuseumFundInput{
+    name: String
+}
+
+input MuseumSetInput{
+    name: String!
+}
+
+input UpdateMuseumSetInput{
+    name: String!
+}
+
+input MuseumMovementInput{
+    acceptDate: Time
+    itemID: ID!
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+    personInput: PersonInput!
+}
+
+input UpdateMuseumMovementInput{
+    name: String
+    acceptDate: Time
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+}
+
+type Mutation {
+    createMuseumItem(input: MuseumItemInput!):MuseumItem!
+    updateMuseumItem(id: ID!, input: UpdateMuseumItemInput!):MuseumItem!
+    deleteMuseumItem(id: ID!):ID!
+
+    createMuseumSet(input: MuseumSetInput!):MuseumSet!
+    updateMuseumSet(id: ID!, input: MuseumSetInput!):MuseumSet!
+    deleteMuseumSet(id: ID!):ID!
+
+    createMuseumItemMovement(input: MuseumMovementInput!):MuseumItemMovement!
+    updateMuseumItemMovement(id: ID!, input: UpdateMuseumMovementInput!):MuseumItemMovement!
+    deleteMuseumItemMovement(id: ID!):ID!
+
+    createMuseumFund(input: MuseumFundInput!):MuseumFund!
+    updateMuseumFund(id: ID!, input:UpdateMuseumFundInput!):MuseumFund!
+    deleteMuseumFund(id: ID!):ID!
+}
