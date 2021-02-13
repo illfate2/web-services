@@ -1,0 +1,10 @@
+{{ define "Edit Museum Set" }}
+{{ template "Header" }}
+<h2>Edit Museum Set</h2>
+<form method="POST">
+    <label> Name </label>
+    <input type="text" required name="name" value="{{ .Name }}"/><br/>
+    <input type="submit" value="Save item"/>
+</form><br/>
+{{ template "Footer" }}
+{{ end }}

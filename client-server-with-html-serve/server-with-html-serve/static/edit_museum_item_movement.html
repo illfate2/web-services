@@ -1,0 +1,17 @@
+{{ define "Update Museum Item Movement" }}
+{{ template "Header" }}
+<h2> Museum Item Movement - {{ .ID }} </h2>
+<form method="POST">
+<ul>
+        <label for="accept_date">Accept Date:</label>
+        <input required type="datetime-local" id="accept_date" name="accept_date" value="{{ .AcceptDate }}">
+        <label for="exhibit_transfer_date">Exhibit Transfer Date:</label>
+        <input required type="datetime-local" id="exhibit_transfer_date"
+               name="exhibit_transfer_date" value="{{ .ExhibitTransferDate }}">
+        <label for="exhibit_return_date">Exhibit Return Date:</label>
+        <input required type="datetime-local" id="exhibit_return_date"
+               name="exhibit_return_date" value="{{ .ExhibitReturnDate }}">
+    <input type="submit" value="Save item"/>
+</ul>
+</form>
+{{ end }}

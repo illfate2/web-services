@@ -1,0 +1,15 @@
+{{define "New museum item set"}}
+{{template "Header"}}
+<form method="post">
+    <ul>
+        <li>
+            <label for="name">Name:</label>
+            <textarea required id="name" name="name"></textarea>
+        </li>
+        <li class="button">
+            <button type="submit">Create item</button>
+        </li>
+    </ul>
+</form>
+{{ template "Footer" }}
+{{end}}
