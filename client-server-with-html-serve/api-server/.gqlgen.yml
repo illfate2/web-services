@@ -1,0 +1,38 @@
+schema:
+  - pkg/api/schema/*.graphql
+
+# Where should the generated server code go?
+exec:
+  filename: pkg/api/generated/generated.go
+  package: generated
+
+# Enable Apollo federation support
+federation:
+  filename: pkg/api/generated/federation.go
+  package: generated
+
+# Where should any generated models go?
+model:
+  filename: pkg/api/generated/model/models_gen.go
+  package: model
+
+# graphql. These normally come from the db or a remote api.
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.IntID
+      - github.com/99designs/gqlgen/graphql.ID
+  MuseumItem:
+    fields:
+      set:
+        resolver: true
+      fund:
+        resolver: true
+      person:
+        resolver: true
+  MuseumItemMovement:
+    fields:
+      item:
+        resolver: true
+      person:
+        resolver: true
