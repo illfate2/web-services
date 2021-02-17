@@ -1,45 +1,44 @@
 import React from "react";
 import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
 import TableContainer from "./TableContainer";
-import "./popup.css";
 import { useHistory } from "react-router-dom";
 
-const CREATE_SET_QUERY = gql`
-  mutation CreateMuseumSet($input: MuseumSetInput!) {
-    createMuseumSet(input: $input) {
+const CREATE_FUND_QUERY = gql`
+  mutation CreateMuseumFund($input: MuseumFundInput!) {
+    createMuseumFund(input: $input) {
       id
       name
     }
   }
 `;
 
-const DELETE_SET_QUERY = gql`
-  mutation DeleteMuseumSet($id: ID!) {
-    deleteMuseumSet(id: $id)
+const DELETE_FUND_QUERY = gql`
+  mutation DeleteMuseumFund($id: ID!) {
+    deleteMuseumFund(id: $id)
   }
 `;
 
-const GET_SETS_QUERY = gql`
+const GET_FUNDS_QUERY = gql`
   {
-    museumSets {
+    museumFunds {
       id
       name
     }
   }
 `;
 
-function CreateSetForm() {
+function CreateFundForm() {
   let input;
-  const [addSet, { data }] = useMutation(CREATE_SET_QUERY);
+  const [addFund, { data }] = useMutation(CREATE_FUND_QUERY);
   return (
     <div>
       <form
         onSubmit={e => {
-          addSet({ variables: { input: { name: input.value } } });
+          addFund({ variables: { input: { name: input.value } } });
           input.value = "";
         }}
       >
-        <label>Set name:</label>
+        <label>Fund name:</label>
         <input
           ref={node => {
             input = node;
@@ -51,17 +50,15 @@ function CreateSetForm() {
   );
 }
 
-function UpdateMuseumSet() {}
+const MuseumFunds = () => {
+  let { loading, error, data } = useQuery(GET_FUNDS_QUERY);
 
-const MuseumSets = () => {
-  let { loading, error, data } = useQuery(GET_SETS_QUERY);
-
-  const [deleteSet, { deleteData }] = useMutation(DELETE_SET_QUERY);
+  const [deleteFund, { deleteData }] = useMutation(DELETE_FUND_QUERY);
 
   const history = useHistory();
 
   const handleClick = id => {
-    history.push("/museumSet/edit/" + id);
+    history.push("/museumFund/edit/" + id);
   };
 
   const columns = React.useMemo(
@@ -95,7 +92,7 @@ const MuseumSets = () => {
         Cell: ({ row }) => (
           <button
             onClick={() => {
-              deleteSet({ variables: { id: row.original.id } });
+              deleteFund({ variables: { id: row.original.id } });
               window.location.reload(false);
             }}
             value={"remove"}
@@ -112,10 +109,10 @@ const MuseumSets = () => {
 
   return (
     <div>
-      <CreateSetForm />
-      <TableContainer columns={columns} data={data.museumSets} />
+      <CreateFundForm />
+      <TableContainer columns={columns} data={data.museumFunds} />
     </div>
   );
 };
 
-export default MuseumSets;
+export default MuseumFunds;

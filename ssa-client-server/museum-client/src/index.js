@@ -9,7 +9,9 @@ import "./index.css";
 import App from "./App";
 
 import EditMuseumSet from "./EditMuseumSet";
-import MuseumSets from "./MuseumSets"
+import MuseumSets from "./MuseumSets";
+import EditMuseumFund from "./EditMuseumFund";
+import MuseumFunds from "./MuseumFunds";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 const client = new ApolloClient({
@@ -26,6 +28,12 @@ ReactDOM.render(
         </Route>
         <Route path="/museumSets">
           <MuseumSets />
+        </Route>
+        <Route path="/museumFund/edit/:id">
+          <EditMuseumFund />
+        </Route>
+        <Route path="/museumFunds">
+          <MuseumFunds />
         </Route>
         <Route path="/">
           <App />
