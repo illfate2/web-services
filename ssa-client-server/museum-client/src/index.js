@@ -12,6 +12,12 @@ import EditMuseumSet from "./EditMuseumSet";
 import MuseumSets from "./MuseumSets";
 import EditMuseumFund from "./EditMuseumFund";
 import MuseumFunds from "./MuseumFunds";
+import ViewMuseumItemMovement from "./ViewMuseumItemMovement";
+import EditMuseumItemMovement from "./EditMuseumItemMovement";
+import MuseumItemMovements from "./MuseumItemMovements";
+import { EditMuseumItem } from "./EditMuseumItem";
+import { ViewMuseumItem } from "./ViewMuseumItem";
+import MuseumItems from "./MuseumItems";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 const client = new ApolloClient({
@@ -34,6 +40,24 @@ ReactDOM.render(
         </Route>
         <Route path="/museumFunds">
           <MuseumFunds />
+        </Route>
+        <Route path="/museumItem/view/:id">
+          <ViewMuseumItem />
+        </Route>
+        <Route path="/museumItem/edit/:id">
+          <EditMuseumItem />
+        </Route>
+        <Route path="/museumItems">
+          <MuseumItems />
+        </Route>
+        <Route path="/museumItemMovement/view/:id">
+          <ViewMuseumItemMovement />
+        </Route>
+        <Route path="/museumItemMovement/edit/:id">
+          <EditMuseumItemMovement />
+        </Route>
+        <Route path="/museumItemMovements">
+          <MuseumItemMovements />
         </Route>
         <Route path="/">
           <App />
