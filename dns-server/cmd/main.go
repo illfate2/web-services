@@ -24,7 +24,10 @@ func mustAddConfigToCache(cache cache.Cache, filePath string) {
 }
 
 func main() {
-	cfg := config.MustParseCLIConfig()
+	cfg, err := config.ParseCLIConfigFromENV()
+	if err != nil {
+		cfg = config.MustParseDNSConfig()
+	}
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{Port: cfg.ServerPort})
 	if err != nil {
 		panic(err)

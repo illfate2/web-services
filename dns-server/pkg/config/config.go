@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/jszwec/csvutil"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/octago/sflags/gen/gflag"
 	"golang.org/x/net/dns/dnsmessage"
 )
@@ -94,15 +95,21 @@ type Resources struct {
 	TTL  int
 }
 
-type CLIConfig struct {
-	ForwardAddr      string `flag:"forward f" desc:"address of dns to forward"`
-	ServerPort       int    `flag:"port p" desc:"server port"`
-	PathToConfigFile string `flag:"config c" desc:"path to config file in csv"`
-	Debug            bool   `flag:"debug d" desc:"enable debug mode with output logs"`
+type DNSConfig struct {
+	ForwardAddr      string `flag:"forward f" envconfig:"FORWARD_ADDR" required:"true" desc:"address of dns to forward"`
+	ServerPort       int    `flag:"port p" envconfig:"SERVER_PORT" required:"true" desc:"server port"`
+	PathToConfigFile string `flag:"config c" envconfig:"PATH_TO_CSV" required:"true" desc:"path to config file in csv"`
+	Debug            bool   `flag:"debug d" envconfig:"IS_DEBUG" default:"false" desc:"enable debug mode with output logs"`
 }
 
-func MustParseCLIConfig() CLIConfig {
-	cfg := CLIConfig{
+func ParseCLIConfigFromENV() (DNSConfig, error) {
+	c := DNSConfig{}
+	err := envconfig.Process("", &c)
+	return c, err
+}
+
+func MustParseDNSConfig() DNSConfig {
+	cfg := DNSConfig{
 		ForwardAddr: "8.8.8.8:53",
 		ServerPort:  8090,
 	}
