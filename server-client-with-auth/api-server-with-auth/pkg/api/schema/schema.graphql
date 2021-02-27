@@ -1,0 +1,156 @@
+scalar Time
+
+type MuseumExhibition {
+    id: ID!
+    name: String!
+    address: String!
+    phoneNo: String!
+}
+
+type MuseumFund {
+    id: ID!
+    name: String!
+}
+
+type MuseumItemMovement {
+    id: ID!
+    acceptDate: Time
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+    item: MuseumItem
+    person: Person
+}
+
+type MuseumItem {
+    id: ID!
+    inventoryNumber: String!
+    name: String!
+    creationDate: Time!
+    annotation: String
+    person: Person!
+    set: MuseumSet!
+    fund: MuseumFund!
+}
+
+type Person {
+    id: ID
+    firstName: String!
+    lastName: String!
+    middleName: String!
+
+}
+
+type MuseumSet {
+    id: ID!
+    name: String!
+}
+
+type Query{
+    museumItem(id: ID!): MuseumItem @auth
+    museumItems: [MuseumItem!]! @auth
+
+    museumSet(id: ID!): MuseumSet @auth
+    museumSets: [MuseumSet!]! @auth
+
+    museumFund(id: ID!): MuseumFund @auth
+    museumFunds: [MuseumFund!]! @auth
+
+    museumMovement(id: ID!): MuseumItemMovement @auth
+    museumMovements: [MuseumItemMovement!]! @auth
+}
+
+input PersonInput {
+    firstName: String!
+    lastName: String!
+    middleName: String!
+}
+
+input MuseumItemInput {
+    inventoryNumber: String!
+    name: String!
+    annotation: String
+    creationDate: Time!
+    setID: ID!
+    fundID: ID!
+    personInput: PersonInput!
+}
+
+input UpdateMuseumItemInput {
+    inventoryNumber: String
+    name: String
+    annotation: String
+    setID: ID
+    fundID: ID
+    creationDate: Time
+}
+
+input MuseumFundInput{
+    name: String!
+}
+
+input UpdateMuseumFundInput{
+    name: String
+}
+
+input MuseumSetInput{
+    name: String!
+}
+
+input UpdateMuseumSetInput{
+    name: String!
+}
+
+input MuseumMovementInput{
+    acceptDate: Time
+    itemID: ID!
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+    personInput: PersonInput!
+}
+
+input UpdateMuseumMovementInput{
+    name: String
+    acceptDate: Time
+    exhibitTransferDate: Time
+    exhibitReturnDate: Time
+}
+
+type User {
+    id: ID!
+    email: String!
+}
+
+type AuthResponse {
+    user: User!
+    accessToken: String!
+    refreshToken: String!
+}
+
+input Signup {
+    email: String!
+    password: String!
+}
+
+type Mutation {
+    signupUser(input: Signup):AuthResponse!
+    login(email: String!,password: String!):AuthResponse!
+
+    createMuseumItem(input: MuseumItemInput!):MuseumItem! @auth
+    updateMuseumItem(id: ID!, input: UpdateMuseumItemInput!):MuseumItem! @auth
+    deleteMuseumItem(id: ID!):ID! @auth
+
+    createMuseumSet(input: MuseumSetInput!):MuseumSet! @auth
+    updateMuseumSet(id: ID!, input: MuseumSetInput!):MuseumSet! @auth @self
+    deleteMuseumSet(id: ID!):ID! @auth @self
+
+    createMuseumItemMovement(input: MuseumMovementInput!):MuseumItemMovement! @auth
+    updateMuseumItemMovement(id: ID!, input: UpdateMuseumMovementInput!):MuseumItemMovement! @auth
+    deleteMuseumItemMovement(id: ID!):ID! @auth
+
+    createMuseumFund(input: MuseumFundInput!):MuseumFund! @auth
+    updateMuseumFund(id: ID!, input:UpdateMuseumFundInput!):MuseumFund! @auth
+    deleteMuseumFund(id: ID!):ID! @auth
+}
+
+directive @auth on FIELD_DEFINITION
+directive @self on FIELD_DEFINITION
