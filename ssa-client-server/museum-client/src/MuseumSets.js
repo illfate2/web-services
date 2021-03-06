@@ -1,8 +1,9 @@
-import React from "react";
-import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
+import React, { useState } from "react";
+import { useQuery, gql, useMutation } from "@apollo/client";
 import TableContainer from "./TableContainer";
 import "./popup.css";
 import { useHistory } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 const CREATE_SET_QUERY = gql`
   mutation CreateMuseumSet($input: MuseumSetInput!) {
@@ -28,35 +29,44 @@ const GET_SETS_QUERY = gql`
   }
 `;
 
-function CreateSetForm() {
+function CreateSetForm({ onSubmit }) {
+  const { register, handleSubmit } = useForm();
   let input;
-  const [addSet, { data }] = useMutation(CREATE_SET_QUERY);
   return (
     <div>
-      <form
-        onSubmit={e => {
-          addSet({ variables: { input: { name: input.value } } });
-          input.value = "";
-        }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)}>
         <label>Set name:</label>
-        <input
-          ref={node => {
-            input = node;
-          }}
-        />
+        <input name="set" ref={register} />
         <button type="submit">Create</button>
       </form>
     </div>
   );
 }
 
-function UpdateMuseumSet() {}
-
 const MuseumSets = () => {
-  let { loading, error, data } = useQuery(GET_SETS_QUERY);
+  const [museumSetsData, setMuseumSetsData] = useState([]);
 
-  const [deleteSet, { deleteData }] = useMutation(DELETE_SET_QUERY);
+  const { loading, data } = useQuery(GET_SETS_QUERY, {
+    onCompleted: data => {
+      setMuseumSetsData(data.museumSets);
+    }
+  });
+
+  const [addSet] = useMutation(CREATE_SET_QUERY, {
+    onCompleted: data => {
+      let dataCopy = [...museumSetsData];
+      dataCopy.push({
+        id: data.createMuseumSet.id,
+        name: data.createMuseumSet.name
+      });
+      setMuseumSetsData(dataCopy);
+    }
+  });
+  const onCreateSetSumbit = input => {
+    addSet({ variables: { input: { name: input.set } } });
+  };
+
+  const [deleteSet] = useMutation(DELETE_SET_QUERY);
 
   const history = useHistory();
 
@@ -96,7 +106,9 @@ const MuseumSets = () => {
           <button
             onClick={() => {
               deleteSet({ variables: { id: row.original.id } });
-              window.location.reload(false);
+              const dataCopy = [...museumSetsData];
+              dataCopy.splice(row.index, 1);
+              setMuseumSetsData(dataCopy);
             }}
             value={"remove"}
           >
@@ -105,15 +117,15 @@ const MuseumSets = () => {
         )
       }
     ],
-    []
+    [museumSetsData]
   );
 
   if (loading) return "Loading...";
 
   return (
     <div>
-      <CreateSetForm />
-      <TableContainer columns={columns} data={data.museumSets} />
+      <CreateSetForm onSubmit={onCreateSetSumbit} />
+      <TableContainer columns={columns} data={museumSetsData} />
     </div>
   );
 };

@@ -22,14 +22,14 @@ const UPDATE_SET_QUERY = gql`
 const EditMuseumSet = () => {
   const id = useParams().id;
   const [name, setName] = useState();
-  const { loading, error, data } = useQuery(GET_SET_QUERY, {
+  const {  data } = useQuery(GET_SET_QUERY, {
     variables: { id: id },
     onCompleted: () => {
       setName(data.museumSet.name);
     }
   });
 
-  const [updateSet, { updateData }] = useMutation(UPDATE_SET_QUERY);
+  const [updateSet] = useMutation(UPDATE_SET_QUERY);
 
   return (
     <div>
