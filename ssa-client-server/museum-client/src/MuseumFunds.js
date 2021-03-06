@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
 import TableContainer from "./TableContainer";
 import { useHistory } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 const CREATE_FUND_QUERY = gql`
   mutation CreateMuseumFund($input: MuseumFundInput!) {
@@ -27,23 +28,21 @@ const GET_FUNDS_QUERY = gql`
   }
 `;
 
-function CreateFundForm() {
-  let input;
-  const [addFund, { data }] = useMutation(CREATE_FUND_QUERY);
+function CreateFundForm({ addFundToTable }) {
+  const { register, handleSubmit } = useForm();
+  const [addFund, { data }] = useMutation(CREATE_FUND_QUERY, {
+    onCompleted: data => {
+      addFundToTable(data);
+    }
+  });
+  const onSumbit = data => {
+    addFund({ variables: { input: { name: data.fund } } });
+  };
   return (
     <div>
-      <form
-        onSubmit={e => {
-          addFund({ variables: { input: { name: input.value } } });
-          input.value = "";
-        }}
-      >
+      <form onSubmit={handleSubmit(onSumbit)}>
         <label>Fund name:</label>
-        <input
-          ref={node => {
-            input = node;
-          }}
-        />
+        <input name="fund" ref={register} />
         <button type="submit">Create</button>
       </form>
     </div>
@@ -51,7 +50,12 @@ function CreateFundForm() {
 }
 
 const MuseumFunds = () => {
-  let { loading, error, data } = useQuery(GET_FUNDS_QUERY);
+  const [museumFundsData, setMuseumFundsData] = useState([]);
+  let { loading } = useQuery(GET_FUNDS_QUERY, {
+    onCompleted: data => {
+      setMuseumFundsData(data.museumFunds);
+    }
+  });
 
   const [deleteFund, { deleteData }] = useMutation(DELETE_FUND_QUERY);
 
@@ -59,6 +63,15 @@ const MuseumFunds = () => {
 
   const handleClick = id => {
     history.push("/museumFund/edit/" + id);
+  };
+
+  const onCreateFund = data => {
+    let dataCopy = [...museumFundsData];
+    dataCopy.push({
+      id: data.createMuseumFund.id,
+      name: data.createMuseumFund.name
+    });
+    setMuseumFundsData(dataCopy);
   };
 
   const columns = React.useMemo(
@@ -93,7 +106,9 @@ const MuseumFunds = () => {
           <button
             onClick={() => {
               deleteFund({ variables: { id: row.original.id } });
-              window.location.reload(false);
+              const dataCopy = [...museumFundsData];
+              dataCopy.splice(row.index, 1);
+              setMuseumFundsData(dataCopy);
             }}
             value={"remove"}
           >
@@ -102,15 +117,15 @@ const MuseumFunds = () => {
         )
       }
     ],
-    []
+    [museumFundsData]
   );
 
   if (loading) return "Loading...";
 
   return (
     <div>
-      <CreateFundForm />
-      <TableContainer columns={columns} data={data.museumFunds} />
+      <CreateFundForm addFundToTable={onCreateFund} />
+      <TableContainer columns={columns} data={museumFundsData} />
     </div>
   );
 };

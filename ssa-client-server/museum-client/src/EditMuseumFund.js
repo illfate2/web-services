@@ -24,14 +24,14 @@ const UPDATE_FUND_QUERY = gql`
 const EditMuseumFund = () => {
   const id = useParams().id;
   const [name, setName] = useState();
-  const { loading, error, data } = useQuery(GET_FUND_QUERY, {
+  const { data } = useQuery(GET_FUND_QUERY, {
     variables: { id: id },
     onCompleted: () => {
       setName(data.museumFund.name);
     }
   });
 
-  const [updateFund, { updateData }] = useMutation(UPDATE_FUND_QUERY);
+  const [updateFund] = useMutation(UPDATE_FUND_QUERY);
 
   return (
     <div>
