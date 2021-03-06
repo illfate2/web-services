@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
+import React, { useState } from "react";
+import { useQuery, gql, useMutation } from "@apollo/client";
 import TableContainer from "./TableContainer";
 import "./popup.css";
 import { useHistory } from "react-router-dom";
@@ -9,6 +9,8 @@ const CREATE_ITEM_QUERY = gql`
   mutation CreateMuseumItem($input: MuseumItemInput!) {
     createMuseumItem(input: $input) {
       id
+      inventoryNumber
+      name
     }
   }
 `;
@@ -47,29 +49,8 @@ const GET_ITEMS_QUERY = gql`
   }
 `;
 
-function CreateItemForm() {
-  const [addItem] = useMutation(CREATE_ITEM_QUERY);
+function CreateItemForm({ onSubmit }) {
   const { register, handleSubmit } = useForm();
-  const onSubmit = data => {
-    addItem({
-      variables: {
-        input: {
-          name: data.name,
-          inventoryNumber: data.inventory_number,
-          annotation: data.annotation,
-          creationDate: data.creation_date + ":00Z",
-          setID: data.sets,
-          fundID: data.funds,
-          personInput: {
-            firstName: data.first_name,
-            lastName: data.last_name,
-            middleName: data.middle_name
-          }
-        }
-      }
-    });
-    window.location.reload(false);
-  };
   const { loading: funds_loading, data: funds_data } = useQuery(
     GET_FUNDS_QUERY
   );
@@ -119,9 +100,45 @@ function CreateItemForm() {
 }
 
 const MuseumItems = () => {
-  let { loading, error, data } = useQuery(GET_ITEMS_QUERY);
+  const [museumItemsData, setMuseumItemsData] = useState([]);
+  const { loading } = useQuery(GET_ITEMS_QUERY, {
+    onCompleted: data => {
+      setMuseumItemsData(data.museumItems);
+    }
+  });
 
-  const [deleteItem, { deleteData }] = useMutation(DELETE_ITEM_QUERY);
+  const [addItem] = useMutation(CREATE_ITEM_QUERY, {
+    onCompleted: data => {
+      let dataCopy = [...museumItemsData];
+      dataCopy.push({
+        id: data.createMuseumItem.id,
+        name: data.createMuseumItem.name,
+        inventoryNumber: data.createMuseumItem.inventoryNumber
+      });
+      setMuseumItemsData(dataCopy);
+    }
+  });
+  const onAddItemSubmit = data => {
+    addItem({
+      variables: {
+        input: {
+          name: data.name,
+          inventoryNumber: data.inventory_number,
+          annotation: data.annotation,
+          creationDate: data.creation_date + ":00Z",
+          setID: data.sets,
+          fundID: data.funds,
+          personInput: {
+            firstName: data.first_name,
+            lastName: data.last_name,
+            middleName: data.middle_name
+          }
+        }
+      }
+    });
+  };
+
+  const [deleteItem] = useMutation(DELETE_ITEM_QUERY);
 
   const history = useHistory();
 
@@ -150,7 +167,7 @@ const MuseumItems = () => {
         Cell: ({ row }) => (
           <button
             onClick={() => {
-                handleClick(row.original.id, "view");
+              handleClick(row.original.id, "view");
             }}
             value={"view"}
           >
@@ -175,28 +192,33 @@ const MuseumItems = () => {
       {
         Header: "delete",
         accessor: "delete",
-        Cell: ({ row }) => (
-          <button
-            onClick={() => {
-              deleteItem({ variables: { id: row.original.id } });
-              window.location.reload(false);
-            }}
-            value={"remove"}
-          >
-            {"remove"}
-          </button>
-        )
+        Cell: ({ row }) => {
+          return (
+            <div>
+              <button
+                onClick={() => {
+                  deleteItem({ variables: { id: row.original.id } });
+                  const dataCopy = [...museumItemsData];
+                  dataCopy.splice(row.index, 1);
+                  setMuseumItemsData(dataCopy);
+                }}
+              >
+                delete
+              </button>
+            </div>
+          );
+        }
       }
     ],
-    []
+    [museumItemsData]
   );
 
   if (loading) return "Loading...";
 
   return (
     <div>
-      <CreateItemForm />
-      <TableContainer columns={columns} data={data.museumItems} />
+      <CreateItemForm onSubmit={onAddItemSubmit} />
+      <TableContainer columns={columns} data={museumItemsData} />
     </div>
   );
 };

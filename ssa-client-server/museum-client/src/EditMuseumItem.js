@@ -1,6 +1,6 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import React, { useState } from "react";
 
 const UPDATE_ITEM_QUERY = gql`
@@ -54,6 +54,7 @@ export const EditMuseumItem = () => {
   const [updateItem] = useMutation(UPDATE_ITEM_QUERY);
   const [item, setItem] = useState();
   const { register, handleSubmit } = useForm();
+  const history = useHistory();
   const onSubmit = data => {
     updateItem({
       variables: {
@@ -64,11 +65,11 @@ export const EditMuseumItem = () => {
           annotation: data.annotation,
           creationDate: data.creation_date + ":00Z",
           setID: data.sets,
-          fundID: data.funds,
+          fundID: data.funds
         }
       }
     });
-    window.location.reload(false);
+    history.push("/museumItems");
   };
   const { loading: funds_loading, data: funds_data } = useQuery(
     GET_FUNDS_QUERY
