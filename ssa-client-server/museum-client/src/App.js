@@ -7,10 +7,10 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Museum App</h1>
-        <a href="/museumItems">Museum items </a>
-        <a href="/museumSets">Museum sets </a>
-        <a href="/museumFunds">Museum funds </a>
-        <a href="/museumItemMovements">Museum movements </a>
+        <Link to="/museumItems">Museum items </Link>
+        <Link to="/museumSets">Museum sets </Link>
+        <Link to="/museumFunds">Museum funds </Link>
+        <Link to="/museumItemMovements">Museum movements </Link>
       </header>
     </div>
   );
