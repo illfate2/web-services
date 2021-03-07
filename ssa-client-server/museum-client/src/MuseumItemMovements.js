@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
 import TableContainer from "./TableContainer";
 import "./popup.css";
@@ -9,6 +9,9 @@ const CREATE_MOVEMENT_QUERY = gql`
   mutation CreateMuseumItemMovement($input: MuseumMovementInput!) {
     createMuseumItemMovement(input: $input) {
       id
+      acceptDate
+      exhibitTransferDate
+      exhibitReturnDate
     }
   }
 `;
@@ -40,8 +43,12 @@ const GET_MOVEMENTS_QUERY = gql`
   }
 `;
 
-function CreateMovementForm() {
-  const [addMovement] = useMutation(CREATE_MOVEMENT_QUERY);
+function CreateMovementForm({ addMovememtToTable }) {
+  const [addMovement] = useMutation(CREATE_MOVEMENT_QUERY, {
+    onCompleted: data => {
+      addMovememtToTable(data);
+    }
+  });
 
   const { loading, data } = useQuery(GET_ITEMS_QUERY);
   const { register, handleSubmit } = useForm();
@@ -51,7 +58,7 @@ function CreateMovementForm() {
         input: {
           acceptDate: data.creation_date + ":00Z",
           exhibitTransferDate: data.transfer_date + ":00Z",
-          exhibitReturnDate: data.return_date+ ":00Z",
+          exhibitReturnDate: data.return_date + ":00Z",
           itemID: data.item_id,
           personInput: {
             firstName: data.first_name,
@@ -61,7 +68,6 @@ function CreateMovementForm() {
         }
       }
     });
-    window.location.reload(false);
   };
   if (loading) return "loading...";
   return (
@@ -106,14 +112,30 @@ function CreateMovementForm() {
 }
 
 const MuseumItemMovements = () => {
-  let { loading, error, data } = useQuery(GET_MOVEMENTS_QUERY);
+  const [movementsData, setMovementsData] = useState([]);
+  let { loading } = useQuery(GET_MOVEMENTS_QUERY, {
+    onCompleted: data => {
+      setMovementsData(data.museumMovements);
+    }
+  });
 
-  const [deleteItem, { deleteData }] = useMutation(DELETE_MOVEMENT_MUTATION);
+  const [deleteItem] = useMutation(DELETE_MOVEMENT_MUTATION);
 
   const history = useHistory();
 
   const handleClick = (id, path) => {
     history.push("/museumItemMovement/" + path + "/" + id);
+  };
+
+  const onCreateMovement = data => {
+    let dataCopy = [...movementsData];
+    dataCopy.push({
+      id: data.createMuseumItemMovement.id,
+      acceptDate: data.createMuseumItemMovement.acceptDate,
+      exhibitTransferDate: data.createMuseumItemMovement.exhibitTransferDate,
+      exhibitReturnDate: data.createMuseumItemMovement.exhibitReturnDate
+    });
+    setMovementsData(dataCopy);
   };
 
   const columns = React.useMemo(
@@ -166,7 +188,9 @@ const MuseumItemMovements = () => {
           <button
             onClick={() => {
               deleteItem({ variables: { id: row.original.id } });
-              window.location.reload(false);
+              const dataCopy = [...movementsData];
+              dataCopy.splice(row.index, 1);
+              setMovementsData(dataCopy);
             }}
             value={"remove"}
           >
@@ -175,15 +199,15 @@ const MuseumItemMovements = () => {
         )
       }
     ],
-    []
+    [movementsData]
   );
 
   if (loading) return "Loading...";
 
   return (
     <div>
-      <CreateMovementForm />
-      <TableContainer columns={columns} data={data.museumMovements} />
+      <CreateMovementForm addMovememtToTable={onCreateMovement} />
+      <TableContainer columns={columns} data={movementsData} />
     </div>
   );
 };
