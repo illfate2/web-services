@@ -18,7 +18,7 @@ func (s *Server) initMuseumSet(e *echo.Echo) {
 	})
 	e.POST("/museumSet", s.createMuseumSet)
 	e.GET("/deleteMuseumSet/:id", s.deleteMuseumSet)
-	e.GET("/editMuseumSet/:id", s.getEditMuseumItempage)
+	e.GET("/editMuseumSet/:id", s.getEditMuseumSetPage)
 	e.POST("/editMuseumSet/:id", s.updateMuseumItem)
 }
 
@@ -58,7 +58,7 @@ func (s *Server) createMuseumSet(c echo.Context) error {
 func (s *Server) getEditMuseumSetPage(c echo.Context) error {
 	id := c.Param("id")
 	parsedID, _ := strconv.ParseInt(id, 10, 64)
-	item, err := s.service.GetMuseumFundByID(int(parsedID))
+	item, err := s.service.GetMuseumSet(int(parsedID))
 	if err != nil {
 		return err
 	}

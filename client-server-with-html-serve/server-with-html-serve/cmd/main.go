@@ -15,7 +15,7 @@ import (
 
 type serverConfig struct {
 	ServerPort  string `envconfig:"SERVER_PORT" default:"5555"`
-	LooFilePath string `envconfig:"LOG_FILE_PATH" default:"log.txt"`
+	LogFilePath string `envconfig:"LOG_FILE_PATH" default:"log.log"`
 }
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	file, err := os.OpenFile(c.LooFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	file, err := os.OpenFile(c.LogFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		panic(err)
 	}

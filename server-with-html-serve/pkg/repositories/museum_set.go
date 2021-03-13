@@ -52,30 +52,14 @@ func (r *Repo) FindMuseumSetByName(name string) (entities.MuseumSet, error) {
 }
 
 func (r *Repo) FindMuseumSet(id int) (entities.MuseumSetWithDetails, error) {
-	rows, err := r.conn.Query(context.Background(),
+	var curSet entities.MuseumSetWithDetails
+	err := r.conn.QueryRow(context.Background(),
 		`SELECT 
-      mis.id, mis.name,
-      mi.id ,mi.name, mi.creation_date, mi.annotation,
-      p.id, p.first_name, p.second_name, p.middle_name
+      mis.id, mis.name
       FROM museum_item_sets mis
-      LEFT JOIN museum_items mi ON mis.id=mi.set_id
-      LEFT JOIN persons p ON mi.keeper_id=p.id
-	WHERE mis.id = $1`, id)
+	WHERE mis.id = $1`, id).Scan(&curSet.ID, &curSet.Name)
 	if err != nil {
 		return entities.MuseumSetWithDetails{}, err
-	}
-	var curSet entities.MuseumSetWithDetails
-	for rows.Next() {
-		var item entities.MuseumItemWithKeeper
-		err := rows.Scan(
-			&curSet.ID, &curSet.Name,
-			&item.ID, &item.Name, &item.CreationDate.Time, &item.Annotation,
-			&item.Keeper.ID, &item.Keeper.FirstName, &item.Keeper.LastName, &item.Keeper.MiddleName,
-		)
-		if err != nil {
-			return entities.MuseumSetWithDetails{}, err
-		}
-		curSet.Items = append(curSet.Items, item)
 	}
 	return curSet, nil
 }

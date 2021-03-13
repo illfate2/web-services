@@ -17,7 +17,7 @@ import (
 type serverConfig struct {
 	ServerPort  string `envconfig:"SERVER_PORT"`
 	DBAddr      string `envconfig:"DB_ADDR"`
-	LooFilePath string `envconfig:"LOG_FILE_PATH" default:"log.txt"`
+	LogFilePath string `envconfig:"LOG_FILE_PATH" default:"log.log"`
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close(context.TODO())
-	file, err := os.OpenFile(c.LooFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	file, err := os.OpenFile(c.LogFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		panic(err)
 	}

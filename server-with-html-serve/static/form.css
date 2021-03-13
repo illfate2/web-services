@@ -1,0 +1,29 @@
+input[type=text] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+form {
+    position: relative;
+
+    width  : 740px;
+    height : 498px;
+    margin : 0 auto;
+
+    background: #ffffff;
+}
+
+select {
+    width: 100%;
+    padding:10px;
+    border-radius:10px;
+}
+
+label {
+    display:block;
+}
+input:required + span:after {
+    content: "Required";
+}
