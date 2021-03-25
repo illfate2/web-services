@@ -1,6 +1,5 @@
-import logo from "./logo.svg";
 import "./App.css";
-import MuseumSets from "./MuseumSets";
+import { Link } from "react-router-dom";
 
 function App() {
   return (

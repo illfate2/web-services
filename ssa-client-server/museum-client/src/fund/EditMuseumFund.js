@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, gql } from "@apollo/client";
-
+import { Context } from "../store/Store";
+import { useHistory } from "react-router-dom";
 
 const GET_FUND_QUERY = gql`
   query MuseumFund($id: ID!) {
@@ -22,6 +23,8 @@ const UPDATE_FUND_QUERY = gql`
 `;
 
 const EditMuseumFund = () => {
+  const [state, dispatch] = useContext(Context);
+  const history = useHistory();
   const id = useParams().id;
   const [name, setName] = useState();
   const { data } = useQuery(GET_FUND_QUERY, {
@@ -31,7 +34,12 @@ const EditMuseumFund = () => {
     }
   });
 
-  const [updateFund] = useMutation(UPDATE_FUND_QUERY);
+  const [updateFund] = useMutation(UPDATE_FUND_QUERY, {
+    onCompleted: data => {
+      dispatch({ type: "UPDATE_FUND", payload: data.updateMuseumFund });
+      history.push("/museumFunds");
+    }
+  });
 
   return (
     <div>

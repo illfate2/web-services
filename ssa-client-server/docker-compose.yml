@@ -1,0 +1,41 @@
+version: "3.7"
+services:
+  front:
+    restart: always
+    build:
+      context: museum-client
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: "http://localhost:8082"
+    ports:
+      - 3000:3000
+    depends_on:
+      - back
+  postgres_db:
+    image: postgres:10.5
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB=pbz2
+      - POSTGRES_USER=pbz2
+      - POSTGRES_PASSWORD=pbz2
+  db_migrations:
+    restart: on-failure
+    build:
+      context: ../client-server-with-html-serve/api-server
+      dockerfile: Dockerfile.migrations
+    command: "-path=/migration/ -database postgres://pbz2:pbz2@postgres_db:5432/pbz2?sslmode=disable up"
+    depends_on:
+      - postgres_db
+  back:
+    restart: always
+    build:
+      context: ../client-server-with-html-serve/api-server
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: '8082'
+      DB_ADDR: 'postgresql://pbz2:pbz2@postgres_db:5432/pbz2?sslmode=disable'
+    ports:
+      - 8082:8082
+    depends_on:
+      - postgres_db

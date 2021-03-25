@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
-import TableContainer from "./TableContainer";
+import React, { useState, useContext } from "react";
+import { useQuery, gql, useMutation } from "@apollo/client";
+import TableContainer from "../table/TableContainer";
 import { useHistory } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { Context } from "../store/Store";
 
 const CREATE_FUND_QUERY = gql`
   mutation CreateMuseumFund($input: MuseumFundInput!) {
@@ -50,14 +51,15 @@ function CreateFundForm({ addFundToTable }) {
 }
 
 const MuseumFunds = () => {
-  const [museumFundsData, setMuseumFundsData] = useState([]);
+  const [state, dispatch] = useContext(Context);
+
   let { loading } = useQuery(GET_FUNDS_QUERY, {
     onCompleted: data => {
-      setMuseumFundsData(data.museumFunds);
+      dispatch({ type: "SET_FUNDS", payload: data.museumFunds });
     }
   });
 
-  const [deleteFund, { deleteData }] = useMutation(DELETE_FUND_QUERY);
+  const [deleteFund] = useMutation(DELETE_FUND_QUERY);
 
   const history = useHistory();
 
@@ -66,12 +68,7 @@ const MuseumFunds = () => {
   };
 
   const onCreateFund = data => {
-    let dataCopy = [...museumFundsData];
-    dataCopy.push({
-      id: data.createMuseumFund.id,
-      name: data.createMuseumFund.name
-    });
-    setMuseumFundsData(dataCopy);
+    dispatch({ type: "ADD_FUND", payload: data.createMuseumFund });
   };
 
   const columns = React.useMemo(
@@ -106,9 +103,7 @@ const MuseumFunds = () => {
           <button
             onClick={() => {
               deleteFund({ variables: { id: row.original.id } });
-              const dataCopy = [...museumFundsData];
-              dataCopy.splice(row.index, 1);
-              setMuseumFundsData(dataCopy);
+              dispatch({ type: "REMOVE_FUND", payload: row.original.id });
             }}
             value={"remove"}
           >
@@ -117,7 +112,7 @@ const MuseumFunds = () => {
         )
       }
     ],
-    [museumFundsData]
+    [state.funds]
   );
 
   if (loading) return "Loading...";
@@ -125,7 +120,7 @@ const MuseumFunds = () => {
   return (
     <div>
       <CreateFundForm addFundToTable={onCreateFund} />
-      <TableContainer columns={columns} data={museumFundsData} />
+      <TableContainer columns={columns} data={state.funds} />
     </div>
   );
 };

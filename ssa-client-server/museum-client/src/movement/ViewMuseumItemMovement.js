@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
 import { useParams } from "react-router-dom";
+import { Context } from "../store/Store";
 
 const GET_MOVEMENTS_QUERY = gql`
   query MuseumMovement($id: ID!) {

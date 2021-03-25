@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useQuery, gql, useMutation } from "@apollo/client";
-import TableContainer from "./TableContainer";
-import "./popup.css";
+import TableContainer from "../table/TableContainer";
 import { useHistory } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { Context } from "../store/Store";
 
 const CREATE_ITEM_QUERY = gql`
   mutation CreateMuseumItem($input: MuseumItemInput!) {
@@ -50,11 +50,19 @@ const GET_ITEMS_QUERY = gql`
 `;
 
 function CreateItemForm({ onSubmit }) {
+  const [state, dispatch] = useContext(Context);
+
   const { register, handleSubmit } = useForm();
-  const { loading: funds_loading, data: funds_data } = useQuery(
-    GET_FUNDS_QUERY
-  );
-  const { loading: sets_loading, data: sets_data } = useQuery(GET_SETS_QUERY);
+  const { loading: funds_loading } = useQuery(GET_FUNDS_QUERY, {
+    onCompleted: data => {
+      dispatch({ type: "SET_FUNDS", payload: data.museumFunds });
+    }
+  });
+  const { loading: sets_loading } = useQuery(GET_SETS_QUERY, {
+    onCompleted: data => {
+      dispatch({ type: "SET_SETS", payload: data.museumSets });
+    }
+  });
 
   if (funds_loading) return "loadding";
   if (sets_loading) return "loadding";
@@ -80,14 +88,14 @@ function CreateItemForm({ onSubmit }) {
         <input name="last_name" ref={register} placeholder="Last name" />
         <input name="middle_name" ref={register} placeholder="Middle name" />
         <select name="funds" ref={register}>
-          {funds_data.museumFunds.map(f => (
+          {state.funds.map(f => (
             <option key={f.id} value={f.id}>
               {f.name}
             </option>
           ))}
         </select>
         <select name="sets" ref={register}>
-          {sets_data.museumSets.map(s => (
+          {state.sets.map(s => (
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
@@ -100,22 +108,17 @@ function CreateItemForm({ onSubmit }) {
 }
 
 const MuseumItems = () => {
-  const [museumItemsData, setMuseumItemsData] = useState([]);
+  const [state, dispatch] = useContext(Context);
+
   const { loading } = useQuery(GET_ITEMS_QUERY, {
     onCompleted: data => {
-      setMuseumItemsData(data.museumItems);
+      dispatch({ type: "SET_ITEMS", payload: data.museumItems });
     }
   });
 
   const [addItem] = useMutation(CREATE_ITEM_QUERY, {
     onCompleted: data => {
-      let dataCopy = [...museumItemsData];
-      dataCopy.push({
-        id: data.createMuseumItem.id,
-        name: data.createMuseumItem.name,
-        inventoryNumber: data.createMuseumItem.inventoryNumber
-      });
-      setMuseumItemsData(dataCopy);
+      dispatch({ type: "ADD_ITEM", payload: data.createMuseumItem });
     }
   });
   const onAddItemSubmit = data => {
@@ -198,9 +201,7 @@ const MuseumItems = () => {
               <button
                 onClick={() => {
                   deleteItem({ variables: { id: row.original.id } });
-                  const dataCopy = [...museumItemsData];
-                  dataCopy.splice(row.index, 1);
-                  setMuseumItemsData(dataCopy);
+                  dispatch({ type: "REMOVE_ITEM", payload: row.original.id });
                 }}
               >
                 delete
@@ -210,7 +211,7 @@ const MuseumItems = () => {
         }
       }
     ],
-    [museumItemsData]
+    [state.items]
   );
 
   if (loading) return "Loading...";
@@ -218,7 +219,7 @@ const MuseumItems = () => {
   return (
     <div>
       <CreateItemForm onSubmit={onAddItemSubmit} />
-      <TableContainer columns={columns} data={museumItemsData} />
+      <TableContainer columns={columns} data={state.items} />
     </div>
   );
 };

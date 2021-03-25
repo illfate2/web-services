@@ -1,7 +1,8 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useForm } from "react-hook-form";
 import { useParams, useHistory } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { Context } from "../store/Store";
 
 const UPDATE_ITEM_QUERY = gql`
   mutation UpdateMuseumItem($id: ID!, $input: UpdateMuseumItemInput!) {
@@ -50,8 +51,13 @@ const GET_FUNDS_QUERY = gql`
 `;
 
 export const EditMuseumItem = () => {
+  const [state, dispatch] = useContext(Context);
   const id = useParams().id;
-  const [updateItem] = useMutation(UPDATE_ITEM_QUERY);
+  const [updateItem] = useMutation(UPDATE_ITEM_QUERY, {
+    onCompleted: data => {
+      dispatch({ type: "UPDATE_ITEM", payload: data.updateMuseumItem });
+    }
+  });
   const [item, setItem] = useState();
   const { register, handleSubmit } = useForm();
   const history = useHistory();

@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import { useQuery, gql, useMutation } from "@apollo/client";
-import TableContainer from "./TableContainer";
-import "./popup.css";
+import TableContainer from "../table/TableContainer";
 import { useHistory } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { Context } from "../store/Store";
 
 const CREATE_SET_QUERY = gql`
   mutation CreateMuseumSet($input: MuseumSetInput!) {
@@ -44,29 +44,27 @@ function CreateSetForm({ onSubmit }) {
 }
 
 const MuseumSets = () => {
-  const [museumSetsData, setMuseumSetsData] = useState([]);
-
-  const { loading, data } = useQuery(GET_SETS_QUERY, {
+  const [state, dispatch] = useContext(Context);
+  const { loading } = useQuery(GET_SETS_QUERY, {
     onCompleted: data => {
-      setMuseumSetsData(data.museumSets);
+      dispatch({ type: "SET_SETS", payload: data.museumSets });
     }
   });
 
-  const [addSet] = useMutation(CREATE_SET_QUERY, {
+  const [addSet, { error }] = useMutation(CREATE_SET_QUERY, {
     onCompleted: data => {
-      let dataCopy = [...museumSetsData];
-      dataCopy.push({
-        id: data.createMuseumSet.id,
-        name: data.createMuseumSet.name
-      });
-      setMuseumSetsData(dataCopy);
+      if (!error) {
+        dispatch({ type: "ADD_SET", payload: data.createMuseumSet });
+      }
     }
   });
-  const onCreateSetSumbit = input => {
+  const onCreateSetSubmit = input => {
     addSet({ variables: { input: { name: input.set } } });
   };
 
-  const [deleteSet] = useMutation(DELETE_SET_QUERY);
+  const [deleteSet] = useMutation(DELETE_SET_QUERY, {
+    onCompleted: data => {}
+  });
 
   const history = useHistory();
 
@@ -106,9 +104,7 @@ const MuseumSets = () => {
           <button
             onClick={() => {
               deleteSet({ variables: { id: row.original.id } });
-              const dataCopy = [...museumSetsData];
-              dataCopy.splice(row.index, 1);
-              setMuseumSetsData(dataCopy);
+              dispatch({ type: "REMOVE_SET", payload: row.original.id });
             }}
             value={"remove"}
           >
@@ -117,15 +113,15 @@ const MuseumSets = () => {
         )
       }
     ],
-    [museumSetsData]
+    [state.sets]
   );
 
   if (loading) return "Loading...";
 
   return (
     <div>
-      <CreateSetForm onSubmit={onCreateSetSumbit} />
-      <TableContainer columns={columns} data={museumSetsData} />
+      <CreateSetForm onSubmit={onCreateSetSubmit} />
+      <TableContainer columns={columns} data={state.sets} />
     </div>
   );
 };
