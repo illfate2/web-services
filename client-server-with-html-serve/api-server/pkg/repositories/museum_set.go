@@ -10,8 +10,6 @@ func (r *Repo) InsertMuseumSet(set entities.MuseumSet) (entities.MuseumSet, erro
 	err := r.conn.QueryRow(context.Background(),
 		`INSERT INTO museum_item_sets(name)
 		VALUES($1)
-		ON CONFLICT (name)
-		DO UPDATE SET name=EXCLUDED.name
 		RETURNING id`,
 		set.Name).
 		Scan(&set.ID)
