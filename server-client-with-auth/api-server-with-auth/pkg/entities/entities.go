@@ -2,6 +2,13 @@ package entities
 
 import "time"
 
+type Auth struct {
+	ID             int
+	ProviderUserID string
+	ProviderType   string
+	UserID         int
+}
+
 type User struct {
 	ID       int
 	Email    string

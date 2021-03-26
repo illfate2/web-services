@@ -2,14 +2,15 @@ package repo
 
 import (
 	"github.com/jackc/pgx/v4/pgxpool"
+	"xorm.io/xorm"
 )
 
-func New(conn *pgxpool.Pool) *Repo {
-	return &Repo{
-		conn: conn,
-	}
-}
 
 type Repo struct {
-	conn *pgxpool.Pool
+	conn   *pgxpool.Pool
+	engine *xorm.Engine
+}
+
+func New(conn *pgxpool.Pool, engine *xorm.Engine) *Repo {
+	return &Repo{conn: conn, engine: engine}
 }

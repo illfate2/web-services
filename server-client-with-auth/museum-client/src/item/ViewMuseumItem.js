@@ -1,6 +1,7 @@
 import React from "react";
-import { useQuery, gql, useMutation, useLazyQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
 import { useParams } from "react-router-dom";
+import {useQueryWithAuthErrHandling} from "../Queries";
 
 const GET_ITEMS_QUERY = gql`
   query MuseumItem($id: ID!) {
@@ -21,7 +22,7 @@ const GET_ITEMS_QUERY = gql`
 
 export const ViewMuseumItem = () => {
   const id = useParams().id;
-  const { loading, data } = useQuery(GET_ITEMS_QUERY, {
+  const { loading, data } = useQueryWithAuthErrHandling(GET_ITEMS_QUERY, {
     variables: {
       id: id
     }
