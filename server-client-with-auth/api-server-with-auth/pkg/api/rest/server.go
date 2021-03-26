@@ -28,13 +28,16 @@ type Server struct {
 	jwtService *auth.JWTService
 }
 
-func NewServer(jwtSvc *auth.JWTService, service *service.Service) *Server {
+func NewServer(jwtSvc *auth.JWTService, service *service.Service, configs ...OAuthConfig) *Server {
 	router := chi.NewRouter()
 	server := &Server{
-		oauth:      NewOAuth(),
+		oauth:      NewOAuth(service, jwtSvc),
 		Handler:    router,
 		jwtService: jwtSvc,
 		service:    service,
+	}
+	for _, c := range configs {
+		server.oauth.WithConfig(c)
 	}
 	router.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,16 +58,16 @@ func NewServer(jwtSvc *auth.JWTService, service *service.Service) *Server {
 	router.Use(corsMiddleware())
 	router.Handle("/login/github", github.StateHandler(
 		gologin.DebugOnlyCookieConfig,
-		github.LoginHandler(server.oauth.googleCfg, nil)))
+		github.LoginHandler(server.oauth.GetConfig(Github), nil)))
 	router.Handle("/callback/github", github.StateHandler(gologin.DebugOnlyCookieConfig,
-		github.CallbackHandler(server.oauth.googleCfg, issueSession(), nil)))
+		github.CallbackHandler(server.oauth.GetConfig(Github), server.oauth.issueSession(), nil)))
 
 	router.HandleFunc("/login/google", server.oauth.HandleGoogleLogin)
 	router.HandleFunc("/callback/google", func(w http.ResponseWriter, req *http.Request) {
-		server.oauth.HandleCallBackFromGoogle(w, req, service, jwtSvc)
+		server.oauth.HandleCallBackFromGoogle(w, req)
 	})
 	router.HandleFunc("/login/discord", func(w http.ResponseWriter, req *http.Request) {
-		http.Redirect(w, req, server.oauth.githubCfg.AuthCodeURL(server.oauth.state), http.StatusTemporaryRedirect)
+		http.Redirect(w, req, server.oauth.GetConfig(Discord).AuthCodeURL(server.oauth.state), http.StatusTemporaryRedirect)
 	})
 	router.HandleFunc("/callback/discord", func(w http.ResponseWriter, req *http.Request) {
 		server.oauth.discordCallback(w, req)

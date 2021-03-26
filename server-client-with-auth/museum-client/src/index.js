@@ -26,11 +26,9 @@ import {RegistrationForm} from "./RegistrationForm";
 const defaultOptions = {
     watchQuery: {
         fetchPolicy: 'no-cache',
-        errorPolicy: 'ignore',
     },
     query: {
         fetchPolicy: 'no-cache',
-        errorPolicy: 'all',
     },
 }
 
@@ -46,9 +44,7 @@ const errorLink = onError(({graphQLErrors, networkError}) => {
 });
 
 const authLink = setContext((_, {headers}) => {
-    // get the authentication token from local storage if it exists
     const token = localStorage.getItem("accessToken");
-    // return the headers tso the context so httpLink can read them
     return {
         headers: {
             ...headers,

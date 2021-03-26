@@ -21,7 +21,7 @@ func (s *Service) SignupWithOAuth(providerID, providerType string) (entities.Use
 }
 
 func (s *Service) createOAuthUser() (entities.User, error) {
-	return s.repo.InsertUser(entities.User{})
+	return s.repo.InsertEmptyUser(entities.User{})
 }
 
 func (s *Service) CreateUser(user entities.User) (entities.User, error) {

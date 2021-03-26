@@ -1,10 +1,10 @@
 import {useMutation, useQuery} from "@apollo/client";
 import {useHistory} from "react-router-dom";
 
-function useMutationWithAuthErrHandling(query) {
+function useMutationWithAuthErrHandling(query, options) {
     const history = useHistory();
-    return useMutation(query, {
-        onError: error => {
+    if (options !== undefined) {
+        options.onError = error => {
             if (
                 error.message === "Token is expired" ||
                 error.message === "empty token" || error.message === "signature is invalid"
@@ -12,7 +12,8 @@ function useMutationWithAuthErrHandling(query) {
                 history.push("/login");
             }
         }
-    });
+    }
+    return useMutation(query, options);
 }
 
 function useQueryWithAuthErrHandling(query, options) {

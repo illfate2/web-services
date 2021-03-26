@@ -14,6 +14,11 @@ func (r *Repo) InsertUser(user entities.User) (entities.User, error) {
 	return user, err
 }
 
+func (r *Repo) InsertEmptyUser(user entities.User) (entities.User, error) {
+	err := r.conn.QueryRow(context.TODO(), `INSERT INTO users DEFAULT VALUES returning id;`).Scan(&user.ID)
+	return user, err
+}
+
 func (r Repo) FindUserByEmail(email string) (entities.User, error) {
 	var user entities.User
 	err := r.conn.QueryRow(context.TODO(),
@@ -26,7 +31,7 @@ func (r Repo) FindUserByEmail(email string) (entities.User, error) {
 func (r Repo) FindUser(id int) (entities.User, error) {
 	var user entities.User
 	err := r.conn.QueryRow(context.TODO(),
-		`SELECT id,email, password FROM users WHERE id = $1`,
+		`SELECT id, email, password FROM users WHERE id = $1`,
 		id,
 	).Scan(&user.ID, &user.Email, &user.Password)
 	return user, err

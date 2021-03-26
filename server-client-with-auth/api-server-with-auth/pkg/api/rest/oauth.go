@@ -22,40 +22,60 @@ import (
 )
 
 type OAuth struct {
-	githubCfg  *oauth2.Config
-	googleCfg  *oauth2.Config
-	discordCfg *oauth2.Config
 	state      string
 	service    *service.Service
 	jwtService *auth.JWTService
+	configs    map[OAuthProvider]*oauth2.Config
+}
+
+type OAuthProvider string
+
+const (
+	Google  OAuthProvider = "google"
+	Discord OAuthProvider = "discord"
+	Github  OAuthProvider = "github"
+)
+
+type OAuthConfig struct {
+	ProviderType OAuthProvider
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
 }
 
 func NewOAuth(service *service.Service, jwtService *auth.JWTService) *OAuth {
 	return &OAuth{
-		githubCfg: &oauth2.Config{
-			ClientID:     "d8efd64a876723cf1c30",
-			ClientSecret: "964cb7bd972d91de80108a1c665f4623926ac15d",
-			RedirectURL:  "http://localhost:8082/callback/github",
-			Endpoint:     githuboauth.Endpoint,
-		},
-		googleCfg: &oauth2.Config{
-			ClientID:     "920271564807-d49j9ob3b02li21rbcl0u75k0brdnf45.apps.googleusercontent.com",
-			ClientSecret: "1ZYVDfGj4-C7gefMZs88b8tR",
-			RedirectURL:  "http://localhost:8082/callback/google",
-			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-			Endpoint:     google.Endpoint,
-		},
-		discordCfg: &oauth2.Config{
-			RedirectURL:  "http://localhost:3000/auth/callback",
-			ClientID:     "id",
-			ClientSecret: "secret",
-			Scopes:       []string{discord.ScopeIdentify},
-			Endpoint:     discord.Endpoint,
-		},
 		state:      "thisshouldberandom",
 		service:    service,
 		jwtService: jwtService,
+		configs: map[OAuthProvider]*oauth2.Config{
+			Google: {
+				Scopes:   []string{"https://www.googleapis.com/auth/userinfo.email"},
+				Endpoint: google.Endpoint,
+			},
+			Github: {
+				Endpoint: githuboauth.Endpoint,
+			},
+			Discord: {
+				Scopes:   []string{discord.ScopeIdentify},
+				Endpoint: discord.Endpoint,
+			},
+		},
 	}
+}
+
+func (o *OAuth) GetConfig(provider OAuthProvider) *oauth2.Config {
+	return o.configs[provider]
+}
+
+func (o *OAuth) WithConfig(cfg OAuthConfig) {
+	config, ok := o.configs[cfg.ProviderType]
+	if !ok {
+		return
+	}
+	config.ClientID = cfg.ClientID
+	config.ClientSecret = cfg.ClientSecret
+	config.RedirectURL = cfg.RedirectURL
 }
 
 func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +86,7 @@ func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request)
 	}
 
 	code := r.FormValue("code")
-	token, err := o.googleCfg.Exchange(context.Background(), code)
+	token, err := o.GetConfig(Google).Exchange(context.Background(), code)
 	if err != nil {
 		return
 	}
@@ -87,7 +107,7 @@ func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request)
 	id := gjson.GetBytes(response, "id").Str
 	user, err := o.service.SignupWithOAuth(id, "google")
 	if err != nil {
-		log.Printf("Got error: %v", err)
+		log.Printf("Got error from signup google: %v", err)
 		return
 	}
 	o.setAuthInfo(w, r, user.ID)
@@ -114,11 +134,12 @@ func (o *OAuth) setAuthInfo(w http.ResponseWriter, req *http.Request, userID int
 }
 
 func (o *OAuth) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	authURL, _ := url.Parse(o.googleCfg.Endpoint.AuthURL)
+	googleCfg := o.GetConfig(Google)
+	authURL, _ := url.Parse(googleCfg.Endpoint.AuthURL)
 	parameters := url.Values{}
-	parameters.Add("client_id", o.googleCfg.ClientID)
-	parameters.Add("scope", strings.Join(o.googleCfg.Scopes, " "))
-	parameters.Add("redirect_uri", o.googleCfg.RedirectURL)
+	parameters.Add("client_id", googleCfg.ClientID)
+	parameters.Add("scope", strings.Join(googleCfg.Scopes, " "))
+	parameters.Add("redirect_uri", googleCfg.RedirectURL)
 	parameters.Add("response_type", "code")
 	parameters.Add("state", o.state)
 	authURL.RawQuery = parameters.Encode()
@@ -135,7 +156,7 @@ func (o *OAuth) issueSession() http.Handler {
 		}
 		user, err := o.service.SignupWithOAuth(strconv.FormatInt(*githubUser.ID, 10), "github")
 		if err != nil {
-			log.Printf("Got error: %v", err)
+			log.Printf("Got error signup github: %v", err)
 			return
 		}
 		o.setAuthInfo(w, req, user.ID)
@@ -150,14 +171,15 @@ func (o *OAuth) discordCallback(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("State does not match."))
 		return
 	}
-	token, err := o.discordCfg.Exchange(context.Background(), r.FormValue("code"))
+	discordCfg := o.GetConfig(Discord)
+	token, err := discordCfg.Exchange(context.Background(), r.FormValue("code"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	res, err := o.discordCfg.Client(context.Background(), token).Get("https://discordapp.com/api/v6/users/@me")
+	res, err := discordCfg.Client(context.Background(), token).Get("https://discordapp.com/api/v6/users/@me")
 	if err != nil || res.StatusCode != 200 {
 		w.WriteHeader(http.StatusInternalServerError)
 		if err != nil {

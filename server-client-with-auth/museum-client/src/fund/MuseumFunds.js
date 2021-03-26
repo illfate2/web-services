@@ -56,7 +56,9 @@ const MuseumFunds = () => {
 
     let {loading} = useQueryWithAuthErrHandling(GET_FUNDS_QUERY, {
         onCompleted: data => {
-            dispatch({type: "SET_FUNDS", payload: data.museumFunds});
+            if (data != null) {
+                dispatch({type: "SET_FUNDS", payload: data.museumFunds});
+            }
         }
     });
 
