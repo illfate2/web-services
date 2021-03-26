@@ -6,11 +6,13 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dghubble/gologin/v2/github"
 	"github.com/pollen5/discord-oauth2"
+	"github.com/tidwall/gjson"
 	"golang.org/x/oauth2"
 	githuboauth "golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
@@ -24,9 +26,11 @@ type OAuth struct {
 	googleCfg  *oauth2.Config
 	discordCfg *oauth2.Config
 	state      string
+	service    *service.Service
+	jwtService *auth.JWTService
 }
 
-func NewOAuth() *OAuth {
+func NewOAuth(service *service.Service, jwtService *auth.JWTService) *OAuth {
 	return &OAuth{
 		githubCfg: &oauth2.Config{
 			ClientID:     "d8efd64a876723cf1c30",
@@ -48,19 +52,20 @@ func NewOAuth() *OAuth {
 			Scopes:       []string{discord.ScopeIdentify},
 			Endpoint:     discord.Endpoint,
 		},
-		state: "thisshouldberandom",
+		state:      "thisshouldberandom",
+		service:    service,
+		jwtService: jwtService,
 	}
 }
 
-func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request,
-	service *service.Service, jwtService *auth.JWTService) {
+func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request) {
 	state := r.FormValue("state")
 	if state != o.state {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
-	code := r.FormValue("code") // TODO possible empty
+	code := r.FormValue("code")
 	token, err := o.googleCfg.Exchange(context.Background(), code)
 	if err != nil {
 		return
@@ -73,35 +78,29 @@ func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request,
 	}
 	defer resp.Body.Close()
 
-	//response, err := ioutil.ReadAll(resp.Body)
-	//if err != nil {
-	//	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-	//	return
-	//}
+	response, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 
-	//email := gjson.GetBytes(response, "email").Str
-	//id := gjson.GetBytes(response, "id").Str
-	//user, err := repo.FindUserByEmail(email)
-	//if err != nil && err != pgx.ErrNoRows {
-	//	return
-	//}
-	//if err == pgx.ErrNoRows {
-	//	user, err = service.CreateUser(entities.User{
-	//		Email:    email,
-	//		Password: id,
-	//	})
-	//	if err != nil {
-	//		w.Write([]byte(err.Error()))
-	//		return
-	//	}
-	//}
-	accessToken, _ := jwtService.GenerateAccessToken(0) // TODO
+	id := gjson.GetBytes(response, "id").Str
+	user, err := o.service.SignupWithOAuth(id, "google")
+	if err != nil {
+		log.Printf("Got error: %v", err)
+		return
+	}
+	o.setAuthInfo(w, r, user.ID)
+
+}
+
+func (o *OAuth) setAuthInfo(w http.ResponseWriter, req *http.Request, userID int) {
+	accessToken, _ := o.jwtService.GenerateAccessToken(userID)
 	tokenResp := struct {
 		AccessToken string
 	}{
 		AccessToken: accessToken,
 	}
-
 	cookie := http.Cookie{
 		Name:     "auth",
 		Value:    tokenResp.AccessToken,
@@ -111,7 +110,7 @@ func (o *OAuth) HandleCallBackFromGoogle(w http.ResponseWriter, r *http.Request,
 		Path:     "/",
 	}
 	http.SetCookie(w, &cookie)
-	http.Redirect(w, r, "http://localhost:3000/", http.StatusFound)
+	http.Redirect(w, req, "http://localhost:3000/", http.StatusFound)
 }
 
 func (o *OAuth) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +125,7 @@ func (o *OAuth) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, authURL.String(), http.StatusTemporaryRedirect)
 }
 
-func issueSession() http.Handler {
+func (o *OAuth) issueSession() http.Handler {
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		githubUser, err := github.UserFromContext(ctx)
@@ -134,7 +133,12 @@ func issueSession() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Print(githubUser)
+		user, err := o.service.SignupWithOAuth(strconv.FormatInt(*githubUser.ID, 10), "github")
+		if err != nil {
+			log.Printf("Got error: %v", err)
+			return
+		}
+		o.setAuthInfo(w, req, user.ID)
 		http.Redirect(w, req, "/query", http.StatusFound)
 	}
 	return http.HandlerFunc(fn)
@@ -172,5 +176,11 @@ func (o *OAuth) discordCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Print(string(body))
+	id := gjson.GetBytes(body, "id").Str
+	user, err := o.service.SignupWithOAuth(id, "discord")
+	if err != nil {
+		log.Printf("Got error: %v", err)
+		return
+	}
+	o.setAuthInfo(w, r, user.ID)
 }

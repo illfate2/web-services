@@ -22,3 +22,12 @@ func (r Repo) FindUserByEmail(email string) (entities.User, error) {
 	).Scan(&user.ID, &user.Email, &user.Password)
 	return user, err
 }
+
+func (r Repo) FindUser(id int) (entities.User, error) {
+	var user entities.User
+	err := r.conn.QueryRow(context.TODO(),
+		`SELECT id,email, password FROM users WHERE id = $1`,
+		id,
+	).Scan(&user.ID, &user.Email, &user.Password)
+	return user, err
+}

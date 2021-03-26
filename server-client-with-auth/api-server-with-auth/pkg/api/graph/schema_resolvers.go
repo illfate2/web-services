@@ -329,7 +329,7 @@ func (r *Resolver) SignupUser(ctx context.Context, input *model.Signup) (*model.
 	}, nil
 }
 func (r *Resolver) Login(ctx context.Context, email string, password string) (*model.AuthResponse, error) {
-	user, err := r.service.Login(email, password)
+	user, err := r.service.GetUser(email, password)
 	if err != nil {
 		return nil, err
 	}
