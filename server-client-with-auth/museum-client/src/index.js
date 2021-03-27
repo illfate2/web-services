@@ -101,7 +101,7 @@ ReactDOM.render(
                         <MuseumItemMovements/>
                     </Route>
                     <Route path="/login">
-                        <LoginForm/>
+                        <LoginForm base_uri={process.env.REACT_APP_API_URL}/>
                     </Route>
                     <Route path="/signup">
                         <RegistrationForm/>
