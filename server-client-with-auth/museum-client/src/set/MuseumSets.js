@@ -52,11 +52,9 @@ const MuseumSets = () => {
         }
     });
 
-    const [addSet, {error}] = useMutationWithAuthErrHandling(CREATE_SET_QUERY, {
+    const [addSet] = useMutationWithAuthErrHandling(CREATE_SET_QUERY, {
         onCompleted: data => {
-            if (!error) {
-                dispatch({type: "ADD_SET", payload: data.createMuseumSet});
-            }
+            dispatch({type: "ADD_SET", payload: data.createMuseumSet});
         }
     });
     const onCreateSetSubmit = input => {
@@ -65,6 +63,7 @@ const MuseumSets = () => {
 
     const [deleteSet] = useMutationWithAuthErrHandling(DELETE_SET_QUERY, {
         onCompleted: data => {
+            dispatch({type: "REMOVE_SET", payload: data.deleteMuseumSet});
         }
     });
 
@@ -106,7 +105,6 @@ const MuseumSets = () => {
                     <button
                         onClick={() => {
                             deleteSet({variables: {id: row.original.id}});
-                            dispatch({type: "REMOVE_SET", payload: row.original.id});
                         }}
                         value={"remove"}
                     >

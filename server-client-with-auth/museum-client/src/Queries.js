@@ -1,4 +1,4 @@
-import {useMutation, useQuery} from "@apollo/client";
+import {fromPromise, gql, useMutation, useQuery} from "@apollo/client";
 import {useHistory} from "react-router-dom";
 
 function useMutationWithAuthErrHandling(query, options) {

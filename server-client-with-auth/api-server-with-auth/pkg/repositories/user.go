@@ -11,6 +11,9 @@ func (r *Repo) InsertUser(user entities.User) (entities.User, error) {
 		`INSERT INTO users(email, password) VALUES($1,$2) RETURNING id`,
 		user.Email, user.Password,
 	).Scan(&user.ID)
+	if err != nil {
+		return entities.User{}, err
+	}
 	return user, err
 }
 

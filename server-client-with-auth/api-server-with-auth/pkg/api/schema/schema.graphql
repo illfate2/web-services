@@ -134,6 +134,7 @@ input Signup {
 type Mutation {
     signupUser(input: Signup):AuthResponse!
     login(email: String!,password: String!):AuthResponse!
+    refreshToken(token: String!):AuthResponse!
 
     createMuseumItem(input: MuseumItemInput!):MuseumItem! @auth
     updateMuseumItem(id: ID!, input: UpdateMuseumItemInput!):MuseumItem! @auth

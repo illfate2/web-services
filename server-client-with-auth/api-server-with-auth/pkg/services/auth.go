@@ -54,3 +54,7 @@ func (s *Service) GetUser(email, password string) (entities.User, error) {
 	}
 	return user, nil
 }
+
+func (s *Service) GetUserByID(id int) (entities.User, error) {
+	return s.repo.FindUser(id)
+}

@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+  front:
+    restart: always
+    build:
+      context: museum-client
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: "http://localhost:8082"
+    ports:
+      - 3000:3000
+    depends_on:
+      - back
+  postgres_db:
+    image: postgres:10.5
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB=pbz2
+      - POSTGRES_USER=pbz2
+      - POSTGRES_PASSWORD=pbz2
+  db_migrations:
+    restart: on-failure
+    build:
+      context: api-server-with-auth
+      dockerfile: Dockerfile.migrations
+    command: "-path=/migration/ -database postgres://pbz2:pbz2@postgres_db:5432/pbz2?sslmode=disable up"
+    depends_on:
+      - postgres_db
+  back:
+    restart: always
+    build:
+      context: api-server-with-auth
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: "8082"
+      DB_ADDR: "postgresql://pbz2:pbz2@localhost:5433/pbz2?sslmode=disable"
+      OAUTH_GOOGLE_ID: "920271564807-d49j9ob3b02li21rbcl0u75k0brdnf45.apps.googleusercontent.com"
+      OAUTH_GOOGLE_SECRET: "1ZYVDfGj4-C7gefMZs88b8tR"
+      OAUTH_DISCORD_ID: "818419701860007956"
+      OAUTH_DISCORD_SECRET: "jLrgosuN3o2_ggtUxETdqRYWSMj26mQe"
+      OAUTH_GITHUB_ID: "d8efd64a876723cf1c30"
+      OAUTH_GITHUB_SECRET: "964cb7bd972d91de80108a1c665f4623926ac15d"
+      OAUTH_GOOGLE_REDIRECT_URL: "http://localhost:8082/callback/google"
+      OAUTH_DISCORD_REDIRECT_URL: "http://localhost:8082/callback/discord"
+      OAUTH_GITHUB_REDIRECT_URL: "http://localhost:8082/callback/github"
+    ports:
+      - 8082:8082
+    depends_on:
+      - postgres_db

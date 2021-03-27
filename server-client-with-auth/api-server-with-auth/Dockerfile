@@ -1,4 +1,4 @@
-FROM golang:alpine3.13 as build
+FROM golang:alpine3.12 as build
 RUN apk add build-base
 WORKDIR server
 COPY go.* ./

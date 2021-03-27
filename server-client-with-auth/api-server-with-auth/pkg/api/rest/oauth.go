@@ -160,7 +160,6 @@ func (o *OAuth) issueSession() http.Handler {
 			return
 		}
 		o.setAuthInfo(w, req, user.ID)
-		http.Redirect(w, req, "/query", http.StatusFound)
 	}
 	return http.HandlerFunc(fn)
 }

@@ -56,6 +56,12 @@ func (s *JWTService) RegenerateAccessToken(refreshToken string) (string, error) 
 		return "", errors.New("not valid user id type")
 	}
 
+	exp := claims["exp"].(float64)
+	isAfter := time.Unix(int64(exp), 0).After(time.Now())
+	if !isAfter {
+		return "", errors.New("token expired")
+	}
+
 	return s.GenerateAccessToken(userID)
 }
 
@@ -78,6 +84,11 @@ func (s *JWTService) IsValidAccessToken(token string) error {
 	access, ok := claims["access"].(bool)
 	if !access || !ok {
 		return errors.New("not valid token")
+	}
+	exp := claims["exp"].(float64)
+	isAfter := time.Unix(int64(exp), 0).After(time.Now())
+	if !isAfter {
+		return errors.New("token expired")
 	}
 	return nil
 }

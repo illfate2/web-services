@@ -38,6 +38,26 @@ func (r *mutationResolver) CreateMuseumItem(ctx context.Context, input model.Mus
 	return convertEntityMuseumItem(museumItem.MuseumItem), nil
 }
 
+func (r *mutationResolver) RefreshToken(ctx context.Context, token string) (*model.AuthResponse, error) {
+	accessToken, err := r.jwtService.RegenerateAccessToken(token)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := r.jwtService.UserIDFromToken(accessToken)
+	if err != nil {
+		return nil, err
+	}
+	user, err := r.service.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthResponse{
+		User:         toModelUser(user),
+		AccessToken:  accessToken,
+		RefreshToken: token,
+	}, nil
+}
+
 func convertEntityMuseumItem(item entities.MuseumItem) *model.MuseumItem {
 	return &model.MuseumItem{
 		ID:              item.ID,

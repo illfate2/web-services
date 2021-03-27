@@ -1,11 +1,14 @@
 import "./App.css";
-import {Link} from "react-router-dom";
+import {Link, useHistory} from "react-router-dom";
 import Cookies from "js-cookie";
 
 function App() {
     const authCookie = Cookies.get("auth");
+    const history = useHistory();
     if (authCookie !== undefined) {
         localStorage.setItem("accessToken", authCookie);
+    } else {
+        history.push("/login");
     }
     return (
         <div className="App">
